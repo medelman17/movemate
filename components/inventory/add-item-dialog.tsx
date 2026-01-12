@@ -95,9 +95,14 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
           })
         } catch (error) {
           console.error("Error identifying product:", error)
+          const errorMessage =
+            error instanceof Error && error.message.includes("unclear")
+              ? "Image is unclear or contains multiple items. Please enter the product name manually."
+              : "Could not identify the product. Please enter the name manually."
+
           toast({
-            title: "Identification failed",
-            description: "Could not identify the product. Please enter the name manually.",
+            title: "Identification needs help",
+            description: errorMessage,
             variant: "destructive",
           })
         } finally {
