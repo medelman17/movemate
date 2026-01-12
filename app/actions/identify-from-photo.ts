@@ -61,6 +61,8 @@ export async function identifyProductFromPhoto(
   try {
     console.log("[v0] Analyzing product photo...", userContext ? "with user context" : "")
 
+    const hasAdditionalPhotos = userContext?.includes("additional photo")
+
     const firstAttempt = await attemptIdentification(imageUrl, "detailed", userContext)
 
     if (firstAttempt.confidence === "high") {
@@ -68,11 +70,26 @@ export async function identifyProductFromPhoto(
       return firstAttempt.fullProductName
     }
 
-    if (firstAttempt.clarificationQuestions && firstAttempt.clarificationQuestions.length > 0 && !userContext) {
-      console.log("[v0] Low confidence, requesting clarification from user")
-      return {
-        needsClarification: true,
-        questions: firstAttempt.clarificationQuestions,
+    if (firstAttempt.clarificationQuestions && firstAttempt.clarificationQuestions.length > 0) {
+      // If user already gave context but we still need help, AND they haven't uploaded extra photos yet
+      if (userContext && !hasAdditionalPhotos) {
+        console.log("[v0] User provided context but still unclear - requesting photos specifically")
+        return {
+          needsClarification: true,
+          questions: [
+            "Can you take another photo from a different angle?",
+            "Is there a brand name or label visible from another side?",
+          ],
+        }
+      }
+
+      // First time asking for help
+      if (!userContext) {
+        console.log("[v0] Low confidence, requesting clarification from user")
+        return {
+          needsClarification: true,
+          questions: firstAttempt.clarificationQuestions,
+        }
       }
     }
 
@@ -136,7 +153,7 @@ RETURN TWO NAMES:
 Return a JSON object with:
 {
   "productName": "Simple generic type",
-  "fullProductName": "Brand Model Color/Size if visible",
+  "fullProductName": "Detailed name with brand/model/specifics",
   "confidence": "high|medium|low",
   "reasoning": "detailed explanation of what you see",
   "needsManualReview": false,

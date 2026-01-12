@@ -320,6 +320,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   const [clarificationNeeded, setClarificationNeeded] = useState(false)
   const [clarificationQuestions, setClarificationQuestions] = useState<string[]>([])
   const [clarificationAnswers, setClarificationAnswers] = useState<string>("")
+  const [clarificationPhotos, setClarificationPhotos] = useState<string[]>([])
   const { toast } = useToast()
   const [formData, setFormData] = useState<Partial<ItemFormData>>({
     name: "",
@@ -347,6 +348,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     setClarificationNeeded(false)
     setClarificationQuestions([])
     setClarificationAnswers("")
+    setClarificationPhotos([])
 
     const validation = await validateImage(file)
     if (!validation.valid) {
@@ -458,11 +460,51 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     }
   }
 
-  const handleClarificationSubmit = async () => {
-    if (!uploadedPhoto || !clarificationAnswers.trim()) {
+  const handleClarificationPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    console.log("[v0] Uploading clarification photo:", file.name)
+
+    setProcessingStage("Validating additional photo...")
+
+    const validation = await validateImage(file)
+    if (!validation.valid) {
+      setProcessingStage("")
       toast({
-        title: "Please provide answers",
-        description: "Enter information about the product to help with identification.",
+        title: "Invalid image",
+        description: validation.error,
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setProcessingStage("Processing additional photo...")
+      const processedImage = await preprocessImage(file)
+      setClarificationPhotos((prev) => [...prev, processedImage])
+      setProcessingStage("")
+      toast({
+        title: "Photo added",
+        description: "Additional photo uploaded successfully",
+      })
+    } catch (error) {
+      console.error("Error processing clarification photo:", error)
+      setProcessingStage("")
+      toast({
+        title: "Processing failed",
+        description: "Could not process the image. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleClarificationSubmit = async () => {
+    if (!uploadedPhoto || (!clarificationAnswers.trim() && clarificationPhotos.length === 0)) {
+      toast({
+        title: "Please provide information",
+        description: "Enter answers or upload additional photos to help with identification.",
         variant: "destructive",
       })
       return
@@ -473,7 +515,12 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     setClarificationNeeded(false)
 
     try {
-      const result = await identifyProductFromPhoto(uploadedPhoto, clarificationAnswers)
+      let contextMessage = clarificationAnswers.trim()
+      if (clarificationPhotos.length > 0) {
+        contextMessage += `\n\nUser provided ${clarificationPhotos.length} additional photo(s) showing different angles/details.`
+      }
+
+      const result = await identifyProductFromPhoto(uploadedPhoto, contextMessage)
 
       if (typeof result === "object" && "needsClarification" in result) {
         setClarificationNeeded(true)
@@ -511,6 +558,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         setIsAnalyzingPhoto(false)
         setIsResearching(false)
         setClarificationAnswers("")
+        setClarificationPhotos([])
 
         toast({
           title: "Product identified and researched!",
@@ -528,6 +576,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         setIsAnalyzingPhoto(false)
         setIsResearching(false)
         setClarificationAnswers("")
+        setClarificationPhotos([])
 
         toast({
           title: "Product identified",
@@ -708,43 +757,89 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                        Help us identify this product
-                      </p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                        Please answer any of these questions to improve identification:
-                      </p>
-                    </div>
-                    <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
-                      {clarificationQuestions.map((question, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-amber-600 dark:text-amber-400">•</span>
-                          <span>{question}</span>
-                        </li>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-amber-900 mb-2">Help us identify this product</h4>
+                    <ul className="space-y-1 text-sm text-amber-800 mb-3">
+                      {clarificationQuestions.map((q, i) => (
+                        <li key={i}>• {q}</li>
                       ))}
                     </ul>
-                    <div className="space-y-2">
+
+                    <div className="space-y-3">
                       <Textarea
-                        placeholder="Type your answers here... (e.g., 'It's an IKEA bookshelf from the living room')"
                         value={clarificationAnswers}
                         onChange={(e) => setClarificationAnswers(e.target.value)}
-                        className="min-h-[80px] bg-white dark:bg-gray-950"
+                        placeholder="Type your answers here..."
+                        className="min-h-[80px] bg-white"
                       />
+
+                      <div className="space-y-2">
+                        <Label className="text-sm text-amber-900">Or upload additional photos</Label>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById("clarification-photo-input")?.click()}
+                            disabled={isAnalyzingPhoto}
+                            className="border-amber-300"
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Add Photo
+                          </Button>
+                          <Input
+                            id="clarification-photo-input"
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleClarificationPhotoUpload}
+                            className="hidden"
+                          />
+                          {clarificationPhotos.length > 0 && (
+                            <span className="text-sm text-amber-700">
+                              {clarificationPhotos.length} photo{clarificationPhotos.length > 1 ? "s" : ""} added
+                            </span>
+                          )}
+                        </div>
+
+                        {clarificationPhotos.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2 mt-2">
+                            {clarificationPhotos.map((photo, idx) => (
+                              <div key={idx} className="relative group">
+                                <img
+                                  src={photo || "/placeholder.svg"}
+                                  alt={`Additional view ${idx + 1}`}
+                                  className="w-full h-20 object-cover rounded border border-amber-200"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                    setClarificationPhotos((prev) => prev.filter((_, i) => i !== idx))
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <Button
-                        type="button"
                         onClick={handleClarificationSubmit}
-                        disabled={!clarificationAnswers.trim() || isAnalyzingPhoto}
-                        className="w-full"
+                        disabled={isAnalyzingPhoto}
+                        className="w-full bg-amber-600 hover:bg-amber-700"
                       >
                         {isAnalyzingPhoto ? (
                           <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Analyzing...
                           </>
                         ) : (
-                          "Submit Information"
+                          "Submit & Re-analyze"
                         )}
                       </Button>
                     </div>
@@ -792,7 +887,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                   >
                     {isAnalyzingPhoto ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Processing...
                       </>
                     ) : (
