@@ -35,8 +35,29 @@ export const PROMPT_META: PromptConfig = {
  * ```
  */
 export const buildPrompt: PromptBuilder<SearchResearchContext> = (context) => {
-  return `Search the web for accurate product specifications for: "${context.productName}"
+  const photoContextSection = context.photoContext
+    ? `
 
+VISUAL CONTEXT FROM PHOTO ANALYSIS:
+${context.photoContext.features ? `Distinctive Features: ${context.photoContext.features.join(", ")}` : ""}
+${context.photoContext.styleFamily ? `Style: ${context.photoContext.styleFamily}` : ""}
+${context.photoContext.category ? `Category: ${context.photoContext.category}` : ""}
+${
+  context.photoContext.estimatedDimensions
+    ? `Estimated Dimensions: ${context.photoContext.estimatedDimensions.length || "?"}" L x ${context.photoContext.estimatedDimensions.width || "?"}" W x ${context.photoContext.estimatedDimensions.height || "?"}" H`
+    : ""
+}
+${context.photoContext.estimatedWeight ? `Estimated Weight: ~${context.photoContext.estimatedWeight} lbs` : ""}
+
+Use this context to:
+- Narrow your search to products matching these visual characteristics
+- Validate dimensions against visual estimates (should be within reasonable range)
+- Prioritize results that match the observed style and features
+`
+    : "";
+
+  return `Search the web for accurate product specifications for: "${context.productName}"
+${photoContextSection}
 Your task is to find the REAL specifications from manufacturer websites, retailers, or product listings.
 
 CRITICAL INSTRUCTIONS:

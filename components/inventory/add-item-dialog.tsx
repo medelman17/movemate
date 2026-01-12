@@ -21,7 +21,7 @@ import { Plus, Sparkles, Loader2, Camera, X, HelpCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemFormData } from "@/lib/types"
 import { researchProduct } from "@/app/actions/product-research"
-import { identifyProductFromPhoto } from "@/app/actions/identify-from-photo"
+import { identifyProductFromPhotoV2Compat as identifyProductFromPhoto } from "@/app/actions/identify-from-photo-v2"
 import { useToast } from "@/hooks/use-toast"
 
 const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]

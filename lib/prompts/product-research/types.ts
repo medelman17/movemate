@@ -48,6 +48,23 @@ export interface UrlResearchContext {
  */
 export interface SearchResearchContext {
   productName: string;
+  /** Optional rich context from photo identification */
+  photoContext?: {
+    /** Distinctive visual features observed */
+    features?: string[];
+    /** Item category from photo analysis */
+    category?: string;
+    /** Visual dimension estimates in inches */
+    estimatedDimensions?: {
+      length: number | null;
+      width: number | null;
+      height: number | null;
+    };
+    /** Visual weight estimate in pounds */
+    estimatedWeight?: number | null;
+    /** Style family (e.g., "Mid-Century Modern") */
+    styleFamily?: string;
+  };
 }
 
 /**

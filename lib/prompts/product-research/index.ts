@@ -41,6 +41,7 @@ export function getResearchPromptBuilder(mode: ResearchMode) {
  *
  * @param input - Product URL or search term
  * @param isUrl - Whether the input is a URL
+ * @param photoContext - Optional rich context from photo identification
  * @returns The formatted prompt string
  *
  * @example
@@ -50,8 +51,19 @@ export function getResearchPromptBuilder(mode: ResearchMode) {
  *
  * // Search mode
  * const searchPrompt = buildResearchPrompt("IKEA KALLAX white", false);
+ *
+ * // Search mode with photo context
+ * const contextPrompt = buildResearchPrompt("Coffee Table", false, {
+ *   features: ["Mid-century modern legs", "White marble top"],
+ *   category: "Furniture",
+ *   styleFamily: "Mid-Century Modern"
+ * });
  * ```
  */
-export function buildResearchPrompt(input: string, isUrl: boolean): string {
-  return isUrl ? buildUrlPrompt({ url: input }) : buildSearchPrompt({ productName: input });
+export function buildResearchPrompt(
+  input: string,
+  isUrl: boolean,
+  photoContext?: import("./types").SearchResearchContext["photoContext"]
+): string {
+  return isUrl ? buildUrlPrompt({ url: input }) : buildSearchPrompt({ productName: input, photoContext });
 }

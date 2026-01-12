@@ -15,13 +15,26 @@ function isURL(text: string): boolean {
   }
 }
 
-export async function researchProduct(input: string): Promise<ProductInfo> {
+export async function researchProduct(
+  input: string,
+  photoContext?: {
+    features?: string[];
+    category?: string;
+    estimatedDimensions?: {
+      length: number | null;
+      width: number | null;
+      height: number | null;
+    };
+    estimatedWeight?: number | null;
+    styleFamily?: string;
+  }
+): Promise<ProductInfo> {
   try {
     const isProductURL = isURL(input)
 
-    console.log("[v0] Research input:", input, "Is URL:", isProductURL)
+    console.log("[v0] Research input:", input, "Is URL:", isProductURL, "Has photo context:", !!photoContext)
 
-    const prompt = buildResearchPrompt(input, isProductURL)
+    const prompt = buildResearchPrompt(input, isProductURL, photoContext)
 
     const { text } = await generateText({
       model: "perplexity/sonar-pro",
