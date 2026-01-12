@@ -1,9 +1,10 @@
 ---
 id: task-4.11
 title: Create photo-identification types file
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:24'
+updated_date: '2026-01-12 18:33'
 labels:
   - prompts
   - photo-identification
