@@ -1,9 +1,36 @@
 "use server";
 
+/**
+ * @deprecated This file contains the V1 multi-attempt photo identification approach.
+ *
+ * **DO NOT USE THIS FILE**
+ *
+ * V1 Issues:
+ * - 10-20 second response time (3 sequential GPT-4o calls)
+ * - Generic clarification questions
+ * - Manual JSON parsing with error handling complexity
+ * - Fallback strategy cascade
+ *
+ * **Use V2 instead**: app/actions/identify-from-photo-v2.ts
+ *
+ * V2 Benefits:
+ * - <4 second response time (single GPT-4o call)
+ * - Strategic questioning based on item analysis
+ * - Structured output with generateObject
+ * - Always-provided visual estimates
+ *
+ * This file is kept temporarily for reference during migration.
+ * Will be removed once V2 is validated in production.
+ *
+ * Migration date: 2026-01-12
+ */
+
 import { generateText } from "ai";
 import { getPhotoPrompt } from "@/lib/prompts/photo-identification";
 
 /**
+ * V1 DEPRECATED - See file header for migration instructions.
+ *
  * Here, a user takes a picture of some item in their apartment, like a couch,
  * tv, chair, etc., uploads it via our application to be included on move manifest,
  * and we try to figure out, with as much precision as possible,
