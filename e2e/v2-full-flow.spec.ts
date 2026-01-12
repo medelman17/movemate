@@ -74,5 +74,8 @@ test.describe("V2 Full Photo Identification Flow", () => {
     console.log("Toast message:", toastText);
 
     console.log("Test completed successfully!");
+
+    // Assert that we got a valid result (either identification or clarification)
+    expect(nameValue || hasClarification).toBeTruthy();
   });
 });
