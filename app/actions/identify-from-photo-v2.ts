@@ -76,10 +76,20 @@ export async function identifyProductFromPhotoV2(
 ): Promise<StrategicIdentificationResult> {
   const startTime = Date.now();
 
+  // Input validation
+  if (!imageUrl || typeof imageUrl !== "string") {
+    throw new Error("Invalid image URL provided");
+  }
+
+  if (!imageUrl.startsWith("data:image/") && !imageUrl.startsWith("http")) {
+    throw new Error("Image URL must be a data URI or HTTP(S) URL");
+  }
+
   try {
     console.log("[v2] Strategic photo identification started", {
       hasContext: !!userContext,
       hasAnswers: !!previousAnswers,
+      imageType: imageUrl.startsWith("data:") ? "base64" : "url",
     });
 
     // Build prompt with context and answers
@@ -111,11 +121,18 @@ export async function identifyProductFromPhotoV2(
     const duration = Date.now() - startTime;
     const result = object as StrategicIdentification;
 
+    // Validate result structure
+    if (!result.itemType || !result.category || !result.strategy) {
+      console.error("[v2] Invalid response structure:", result);
+      throw new Error("AI returned incomplete analysis. Please try again.");
+    }
+
     console.log(`[v2] Analysis complete in ${duration}ms`, {
       itemType: result.itemType,
       strategy: result.strategy.approach,
       hasImmediateId: !!result.immediateIdentification,
       questionCount: result.strategy.questions.length,
+      confidence: result.strategy.confidence,
     });
 
     // Transform to result format
@@ -151,7 +168,45 @@ export async function identifyProductFromPhotoV2(
     const duration = Date.now() - startTime;
     console.error(`[v2] Error after ${duration}ms:`, error);
 
-    // Return graceful fallback
+    // Classify error for better user feedback
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+
+      // Rate limiting
+      if (message.includes("rate limit") || message.includes("too many requests")) {
+        throw new Error(
+          "AI service is temporarily busy. Please wait a moment and try again."
+        );
+      }
+
+      // Invalid image
+      if (
+        message.includes("invalid") ||
+        message.includes("unsupported") ||
+        message.includes("corrupt")
+      ) {
+        throw new Error(
+          "Image appears to be invalid or corrupted. Please try a different photo."
+        );
+      }
+
+      // Network/timeout
+      if (message.includes("timeout") || message.includes("network") || message.includes("fetch")) {
+        throw new Error(
+          "Network error while analyzing photo. Please check your connection and try again."
+        );
+      }
+
+      // API key/auth
+      if (message.includes("unauthorized") || message.includes("forbidden") || message.includes("api key")) {
+        console.error("[v2] Authentication error - check API configuration");
+        throw new Error(
+          "Service configuration error. Please contact support."
+        );
+      }
+    }
+
+    // Generic fallback
     throw new Error("Failed to analyze photo. Please try again or enter details manually.");
   }
 }
