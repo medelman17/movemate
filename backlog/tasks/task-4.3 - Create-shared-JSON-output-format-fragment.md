@@ -1,9 +1,10 @@
 ---
 id: task-4.3
 title: Create shared JSON output format fragment
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:23'
+updated_date: '2026-01-12 18:31'
 labels:
   - prompts
   - shared

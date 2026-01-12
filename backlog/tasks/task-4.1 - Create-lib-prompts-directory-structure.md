@@ -1,9 +1,10 @@
 ---
 id: task-4.1
 title: Create lib/prompts directory structure
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:23'
+updated_date: '2026-01-12 18:31'
 labels:
   - prompts
   - setup

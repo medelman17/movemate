@@ -1,9 +1,10 @@
 ---
 id: task-4.5
 title: Create shared dimension conversion fragment
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:23'
+updated_date: '2026-01-12 18:31'
 labels:
   - prompts
   - shared
