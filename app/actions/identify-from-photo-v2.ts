@@ -1,13 +1,17 @@
 "use server";
 
-import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { generateObject, createGateway } from "ai";
 import {
   buildStrategicPrompt,
   strategicIdentificationSchema,
   type StrategicIdentification,
   type ClarificationQuestion,
 } from "@/lib/prompts/photo-identification";
+
+// Create Vercel AI Gateway instance
+const gateway = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY ?? "",
+});
 
 /**
  * V2: Strategic photo identification with single-pass analysis.
@@ -95,9 +99,9 @@ export async function identifyProductFromPhotoV2(
     // Build prompt with context and answers
     const promptText = buildStrategicPrompt({ userContext, previousAnswers });
 
-    // Single structured call to GPT-4o
+    // Single structured call to GPT-4o via Vercel AI Gateway
     const { object } = await generateObject({
-      model: openai("gpt-4o"),
+      model: gateway("openai/gpt-4o"),
       schema: strategicIdentificationSchema,
       messages: [
         {

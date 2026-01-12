@@ -10,7 +10,7 @@ async function loginAsTestUser(page: Page) {
 }
 
 test.describe("V2 Full Photo Identification Flow", () => {
-  test.setTimeout(90000); // 90 second timeout for AI calls
+  test.setTimeout(120000); // 2 minute timeout for AI calls via gateway
 
   test("complete photo upload and identification flow", async ({ page }) => {
     await loginAsTestUser(page);
@@ -47,15 +47,15 @@ test.describe("V2 Full Photo Identification Flow", () => {
     // 3. Show error toast
     // 4. Fill in the name field
 
+    // Wait for any of these to appear (use .first() to handle multiple matches)
     const completionLocator = page
       .locator('div[role="status"]:has-text("Product identified")') // Success toast
-      .or(page.locator("text=Help us identify this product")) // Clarification
-      .or(page.locator("text=Need more information")) // Clarification
+      .or(page.locator("h4:has-text('Help us identify')")) // Clarification heading
       .or(page.locator('div[role="status"]:has-text("identified")')) // Any identification toast
       .or(page.locator('div[role="status"]:has-text("Research failed")')) // Research error (but ID worked)
       .or(page.locator('div[role="status"]:has-text("Identification needs help")')); // ID failed
 
-    await expect(completionLocator).toBeVisible({ timeout: 60000 });
+    await expect(completionLocator.first()).toBeVisible({ timeout: 60000 });
 
     // Take final screenshot
     await page.screenshot({ path: "e2e/screenshots/03-result.png" });
