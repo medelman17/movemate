@@ -606,7 +606,39 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
       let photoUrl = formData.photo_url
       if (uploadedPhoto) {
-        photoUrl = uploadedPhoto
+        try {
+          // Convert base64 to blob
+          const base64Response = await fetch(uploadedPhoto)
+          const blob = await base64Response.blob()
+
+          // Create file from blob
+          const file = new File([blob], `item-${Date.now()}.jpg`, { type: "image/jpeg" })
+
+          // Upload to Vercel Blob
+          const formDataToUpload = new FormData()
+          formDataToUpload.append("file", file)
+
+          const uploadResponse = await fetch("/api/upload", {
+            method: "POST",
+            body: formDataToUpload,
+          })
+
+          if (!uploadResponse.ok) {
+            throw new Error("Failed to upload photo")
+          }
+
+          const uploadResult = await uploadResponse.json()
+          photoUrl = uploadResult.url
+
+          console.log("[v0] Photo uploaded to Vercel Blob:", uploadResult.url)
+        } catch (uploadError) {
+          console.error("[v0] Error uploading photo to Blob:", uploadError)
+          toast({
+            title: "Photo upload failed",
+            description: "Item will be saved without photo. You can add it later.",
+          })
+          photoUrl = null
+        }
       }
 
       const { error } = await supabase.from("items").insert({

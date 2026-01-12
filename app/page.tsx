@@ -16,7 +16,7 @@ import type { Item } from "@/lib/types"
 import { useRouter } from "next/navigation"
 
 const AUTO_LOGIN_ENABLED = true
-const TEST_USER_EMAIL = "test@movemaster.com"
+const TEST_USER_EMAIL = "test@movemate.com"
 const TEST_USER_PASSWORD = "testpassword123"
 
 export default function HomePage() {
@@ -180,7 +180,7 @@ export default function HomePage() {
                 <BoxIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-xl font-bold leading-tight">MoveMaster Inventory</h1>
+                <h1 className="text-sm sm:text-xl font-bold leading-tight">MoveMate Inventory</h1>
                 <p className="text-xs text-muted-foreground">Track metrics & volume</p>
               </div>
             </div>
