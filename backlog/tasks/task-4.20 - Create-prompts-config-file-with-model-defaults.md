@@ -1,9 +1,10 @@
 ---
 id: task-4.20
 title: Create prompts config file with model defaults
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-12 18:42'
 labels:
   - prompts
   - config

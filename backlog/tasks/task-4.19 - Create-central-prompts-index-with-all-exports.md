@@ -1,9 +1,10 @@
 ---
 id: task-4.19
 title: Create central prompts index with all exports
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-12 18:42'
 labels:
   - prompts
   - exports
