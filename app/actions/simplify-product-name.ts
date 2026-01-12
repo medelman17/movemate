@@ -1,6 +1,7 @@
 "use server"
 
 import { generateText } from "ai"
+import { simplifyNameSystemPrompt, SIMPLIFY_NAME_META } from "@/lib/prompts/utilities"
 
 /**
  * Simplifies a detailed product name into a clean, generic item type.
@@ -19,40 +20,18 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
 
   try {
     const { text } = await generateText({
-      model: "openai/gpt-4o-mini",
+      model: SIMPLIFY_NAME_META.model,
       messages: [
         {
           role: "system",
-          content: `You are a product name simplifier. Your job is to convert detailed product names into simple, generic item types suitable for a moving inventory.
-
-RULES:
-1. Remove all brand names (IKEA, Yaheetech, HOMCOM, etc.)
-2. Remove model names/numbers (KALLAX, HEMNES, etc.)
-3. Remove colors (white, dark blue, cream, etc.)
-4. Remove dimensions and measurements
-5. Remove material descriptions unless essential to the item type
-6. Remove style descriptors (modern, vintage, velvet, etc.)
-7. Keep only the core item type
-8. Use title case
-9. Keep it to 1-3 words maximum
-
-EXAMPLES:
-- "IKEA KALLAX Shelf unit, white, 77x147 cm" → "Shelf Unit"
-- "Michigan Velvet Ottoman Dark Blue with Storage" → "Storage Ottoman"
-- "Yaheetech 5-Tier Metal Bookshelf" → "Bookshelf"
-- "HEMNES 8-drawer dresser, white stain, 63x37 3/8" → "Dresser"
-- "Modern Tufted Velvet Accent Chair in Navy" → "Accent Chair"
-- "42" Samsung Smart TV 4K UHD" → "TV"
-- "KitchenAid Artisan 5-Quart Stand Mixer Red" → "Stand Mixer"
-
-Return ONLY the simplified name, nothing else.`,
+          content: simplifyNameSystemPrompt,
         },
         {
           role: "user",
           content: fullProductName,
         },
       ],
-      maxTokens: 50,
+      maxTokens: SIMPLIFY_NAME_META.maxTokens,
     })
 
     const simplified = text.trim()

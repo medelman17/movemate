@@ -1,9 +1,10 @@
 ---
 id: task-4.22
 title: Update product-research.ts to use extracted prompts
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-12 18:41'
 labels:
   - prompts
   - integration

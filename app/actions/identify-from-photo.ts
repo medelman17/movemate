@@ -1,6 +1,7 @@
 "use server";
 
 import { generateText } from "ai";
+import { getPhotoPrompt } from "@/lib/prompts/photo-identification";
 
 /**
  * Here, a user takes a picture of some item in their apartment, like a couch,
@@ -128,76 +129,12 @@ async function attemptIdentification(
   strategy: "detailed" | "visual" | "fallback",
   userContext?: string
 ): Promise<IdentificationResult> {
-  let promptText = "";
-
-  const contextNote = userContext
-    ? `\n\nUSER PROVIDED CONTEXT: ${userContext}\nUse this information to improve identification.`
-    : "";
-
-  if (strategy === "detailed") {
-    promptText = `Analyze this image and identify the product with as much detail as possible.
-
-CRITICAL INSTRUCTIONS:
-1. Look for brand logos, labels, or model numbers
-2. Identify specific product names if visible
-3. Note distinctive features, colors, materials, style
-4. If you see multiple items, focus on the main/largest item
-5. Rate your confidence: HIGH (brand/model visible), MEDIUM (distinctive features), LOW (generic)
-6. If confidence is LOW or MEDIUM, provide 2-3 clarification questions to ask the user
-
-RETURN TWO NAMES:
-- "productName": Simple generic type (e.g., "Coffee Table", "Shelf Unit", "Ottoman")
-- "fullProductName": Detailed name with brand/model/specifics (e.g., "IKEA KALLAX Shelf unit, white", "Michigan Velvet Ottoman Dark Blue")
-
-Return a JSON object with:
-{
-  "productName": "Simple generic type",
-  "fullProductName": "Detailed name with brand/model/specifics",
-  "confidence": "high|medium|low",
-  "reasoning": "detailed explanation of what you see",
-  "needsManualReview": false,
-  "clarificationQuestions": ["question 1?", "question 2?"]
-}
-
-Return ONLY valid JSON, no other text.${contextNote}`;
-  } else if (strategy === "visual") {
-    promptText = `Look at this image and describe what you see, focusing on the item type and characteristics.
-
-INSTRUCTIONS:
-1. Ignore any text/labels you can't read clearly
-2. Focus on shape, size, material, color, style
-3. Provide both simple and detailed names
-4. Handle edge cases (blurry, multiple objects, partial visibility)
-
-Return a JSON object:
-{
-  "productName": "Simple type (e.g., Bookshelf, Armchair)",
-  "fullProductName": "Detailed description (e.g., Wooden Bookshelf with Glass Doors, Blue Velvet Armchair)",
-  "confidence": "medium|low",
-  "reasoning": "visual characteristics observed",
-  "needsManualReview": false,
-  "clarificationQuestions": ["helpful questions"]
-}
-
-Return ONLY valid JSON.${contextNote}`;
-  } else {
-    promptText = `Identify the basic category of the item in this image.
-
-Return JSON:
-{
-  "productName": "generic category",
-  "fullProductName": "generic category with visible details",
-  "confidence": "low",
-  "reasoning": "explanation",
-  "needsManualReview": true/false,
-  "clarificationQuestions": []
-}
-
-Return ONLY valid JSON.${contextNote}`;
-  }
+  // Get prompt builder and config for the strategy
+  const { build, config } = getPhotoPrompt(strategy);
+  const promptText = build({ userContext });
 
   const { text } = await generateText({
-    model: "openai/gpt-4o",
+    model: config.model,
     messages: [
       {
         role: "user",
@@ -213,7 +150,7 @@ Return ONLY valid JSON.${contextNote}`;
         ],
       },
     ],
-    maxTokens: 400,
+    maxTokens: config.maxTokens,
   });
 
   try {
