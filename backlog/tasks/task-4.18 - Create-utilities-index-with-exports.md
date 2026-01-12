@@ -1,9 +1,10 @@
 ---
 id: task-4.18
 title: Create utilities index with exports
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:24'
+updated_date: '2026-01-12 18:39'
 labels:
   - prompts
   - utilities
