@@ -20,7 +20,7 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
 
   try {
     const { text } = await generateText({
-      model: SIMPLIFY_NAME_META.model,
+      model: SIMPLIFY_NAME_META.model as any, // Provider-specific model string
       messages: [
         {
           role: "system",
@@ -31,7 +31,7 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
           content: fullProductName,
         },
       ],
-      maxTokens: SIMPLIFY_NAME_META.maxTokens,
+      maxOutputTokens: SIMPLIFY_NAME_META.maxTokens,
     })
 
     const simplified = text.trim()

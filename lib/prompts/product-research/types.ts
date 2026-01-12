@@ -1,4 +1,8 @@
 import { z } from "zod";
+import type { ResearchMode } from "../types";
+
+// Re-export for external consumers
+export type { ResearchMode };
 
 /**
  * Product information schema for research results.
@@ -30,11 +34,6 @@ export const productInfoSchema = z.object({
  * Type derived from the product info schema.
  */
 export type ProductInfo = z.infer<typeof productInfoSchema>;
-
-/**
- * Research mode types.
- */
-export type ResearchMode = "url" | "search";
 
 /**
  * Context for URL-based research.

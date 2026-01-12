@@ -29,9 +29,6 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}`,
-        },
       })
       if (error) throw error
       router.push("/")
@@ -53,9 +50,6 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({
         email: "test@movemaster.com",
         password: "testpassword123",
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}`,
-        },
       })
       if (error) throw error
       router.push("/")

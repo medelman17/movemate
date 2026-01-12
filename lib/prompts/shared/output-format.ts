@@ -19,7 +19,7 @@ import { z } from "zod";
  * // Returns: "Return a JSON object with: name (string), age (number)..."
  * ```
  */
-export function jsonOutputInstruction<T extends z.ZodTypeAny>(schema: T): string {
+export function jsonOutputInstruction<T extends z.ZodTypeAny>(_schema: T): string {
   // For now, return a simple instruction
   // Future enhancement: parse schema and generate detailed structure
   return `Return a valid JSON object matching the required schema.`;

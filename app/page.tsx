@@ -24,9 +24,9 @@ export default function HomePage() {
   const [filteredItems, setFilteredItems] = useState<Item[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [locationFilter, setLocationFilter] = useState<string>("all")
-  const [packedFilter, setPackedFilter] = useState<string>("all")
+  const [categoryFilter, _setCategoryFilter] = useState<string>("all")
+  const [locationFilter, _setLocationFilter] = useState<string>("all")
+  const [packedFilter, _setPackedFilter] = useState<string>("all")
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const router = useRouter()
 
@@ -167,8 +167,9 @@ export default function HomePage() {
     return sum
   }, 0)
 
-  const categories = Array.from(new Set(items.map((item) => item.category)))
-  const locations = Array.from(new Set(items.map((item) => item.location)))
+  // These will be used when filter dropdowns are implemented
+  // const categories = Array.from(new Set(items.map((item) => item.category)))
+  // const locations = Array.from(new Set(items.map((item) => item.location)))
 
   return (
     <div className="min-h-screen bg-background">

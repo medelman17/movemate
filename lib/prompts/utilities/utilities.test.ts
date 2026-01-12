@@ -131,7 +131,7 @@ describe("Utility Prompts", () => {
 
     it("should have at least one changelog entry", () => {
       expect(SIMPLIFY_NAME_META.changelog.length).toBeGreaterThan(0);
-      const firstEntry = SIMPLIFY_NAME_META.changelog[0];
+      const firstEntry = SIMPLIFY_NAME_META.changelog[0]!;
       expect(firstEntry.version).toBeDefined();
       expect(firstEntry.date).toBeDefined();
       expect(firstEntry.change).toBeDefined();
@@ -200,7 +200,10 @@ describe("Utility Prompts", () => {
         // Check each word starts with capital
         const words = example.split(" ");
         words.forEach((word) => {
-          expect(word[0]).toBe(word[0].toUpperCase());
+          const firstChar = word[0];
+          if (firstChar) {
+            expect(firstChar).toBe(firstChar.toUpperCase());
+          }
         });
       });
     });
@@ -214,8 +217,8 @@ describe("Utility Prompts", () => {
         if (afterArrow) {
           // Extract text between quotes
           const match = afterArrow.match(/"([^"]+)"/);
-          if (match) {
-            const simplifiedName = match[1];
+          const simplifiedName = match?.[1];
+          if (simplifiedName) {
             const wordCount = simplifiedName.trim().split(/\s+/).length;
             expect(wordCount).toBeLessThanOrEqual(3);
             expect(wordCount).toBeGreaterThanOrEqual(1);

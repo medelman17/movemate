@@ -11,6 +11,7 @@ export interface Item {
   width: number | null
   height: number | null
   can_disassemble: boolean
+  is_fragile: boolean
   photo_url: string | null
   notes: string | null
   is_packed: boolean

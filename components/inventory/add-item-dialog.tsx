@@ -462,9 +462,9 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
   const handleClarificationPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    if (!files || files.length === 0) return
+    const file = files?.[0]
+    if (!file) return
 
-    const file = files[0]
     console.log("[v0] Uploading clarification photo:", file.name)
 
     setProcessingStage("Validating additional photo...")
