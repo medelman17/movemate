@@ -172,8 +172,8 @@ export async function identifyProductFromPhotoV2(
     if (error instanceof Error) {
       const message = error.message.toLowerCase();
 
-      // Rate limiting
-      if (message.includes("rate limit") || message.includes("too many requests")) {
+      // Rate limiting / quota exceeded
+      if (message.includes("rate limit") || message.includes("too many requests") || message.includes("quota") || message.includes("insufficient_quota")) {
         throw new Error(
           "AI service is temporarily busy. Please wait a moment and try again."
         );
@@ -202,6 +202,14 @@ export async function identifyProductFromPhotoV2(
         console.error("[v2] Authentication error - check API configuration");
         throw new Error(
           "Service configuration error. Please contact support."
+        );
+      }
+
+      // Schema validation error
+      if (message.includes("schema") || message.includes("json_schema") || message.includes("required")) {
+        console.error("[v2] Schema validation error - check Zod schema compatibility with OpenAI:", error);
+        throw new Error(
+          "AI configuration error. Please contact support."
         );
       }
     }

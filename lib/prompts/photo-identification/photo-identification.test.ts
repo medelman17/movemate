@@ -202,13 +202,14 @@ describe("Photo Identification Prompts", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should accept output without optional fields", () => {
+    it("should accept output with null clarification questions", () => {
       const minimalOutput = {
         productName: "Chair",
         fullProductName: "IKEA POÄNG Armchair",
         confidence: "medium" as const,
         reasoning: "Generic furniture item",
         needsManualReview: true,
+        clarificationQuestions: null,
       };
 
       const result = identificationOutputSchema.safeParse(minimalOutput);
@@ -393,9 +394,11 @@ describe("Photo Identification Prompts", () => {
                 rationale: "Retailer catalog search will find exact match",
                 inputType: "select",
                 options: ["IKEA", "West Elm", "CB2", "Article"],
+                placeholder: null,
               },
             ],
           },
+          immediateIdentification: null,
         };
 
         const result = strategicIdentificationSchema.safeParse(validOutput);
@@ -407,10 +410,12 @@ describe("Photo Identification Prompts", () => {
           itemType: "Coffee Table",
           category: "Furniture",
           distinctiveFeatures: ["IKEA LACK branding visible"],
+          styleFamily: null,
           visualEstimates: {
             dimensions: { length: 35, width: 22, height: 18 },
             weight: 15,
             canDisassemble: false,
+            notes: null,
           },
           strategy: {
             approach: "use_estimates",
@@ -434,10 +439,12 @@ describe("Photo Identification Prompts", () => {
           itemType: "Table",
           category: "Furniture",
           distinctiveFeatures: [],
+          styleFamily: null,
           visualEstimates: {
             dimensions: { length: null, width: null, height: null },
             weight: null,
             canDisassemble: null,
+            notes: null,
           },
           strategy: {
             approach: "invalid_strategy",
@@ -445,6 +452,7 @@ describe("Photo Identification Prompts", () => {
             reasoning: "Test",
             questions: [],
           },
+          immediateIdentification: null,
         };
 
         const result = strategicIdentificationSchema.safeParse(invalidOutput);
@@ -456,10 +464,12 @@ describe("Photo Identification Prompts", () => {
           itemType: "Table",
           category: "InvalidCategory",
           distinctiveFeatures: [],
+          styleFamily: null,
           visualEstimates: {
             dimensions: { length: null, width: null, height: null },
             weight: null,
             canDisassemble: null,
+            notes: null,
           },
           strategy: {
             approach: "use_estimates",
@@ -467,6 +477,7 @@ describe("Photo Identification Prompts", () => {
             reasoning: "Test",
             questions: [],
           },
+          immediateIdentification: null,
         };
 
         const result = strategicIdentificationSchema.safeParse(invalidOutput);
@@ -478,10 +489,12 @@ describe("Photo Identification Prompts", () => {
           itemType: "Table",
           category: "Furniture",
           distinctiveFeatures: [],
+          styleFamily: null,
           visualEstimates: {
             dimensions: { length: null, width: null, height: null },
             weight: null,
             canDisassemble: null,
+            notes: null,
           },
           strategy: {
             approach: "use_estimates",
@@ -489,6 +502,7 @@ describe("Photo Identification Prompts", () => {
             reasoning: "Test",
             questions: [],
           },
+          immediateIdentification: null,
         };
 
         const result = strategicIdentificationSchema.safeParse(outOfRangeConfidence);
@@ -500,22 +514,25 @@ describe("Photo Identification Prompts", () => {
           itemType: "Table",
           category: "Furniture",
           distinctiveFeatures: [],
+          styleFamily: null,
           visualEstimates: {
             dimensions: { length: null, width: null, height: null },
             weight: null,
             canDisassemble: null,
+            notes: null,
           },
           strategy: {
             approach: "store_search",
             confidence: 0.5,
             reasoning: "Test",
             questions: [
-              { question: "Q1?", rationale: "R1", inputType: "text" },
-              { question: "Q2?", rationale: "R2", inputType: "text" },
-              { question: "Q3?", rationale: "R3", inputType: "text" },
-              { question: "Q4?", rationale: "R4", inputType: "text" },
+              { question: "Q1?", rationale: "R1", inputType: "text", options: null, placeholder: null },
+              { question: "Q2?", rationale: "R2", inputType: "text", options: null, placeholder: null },
+              { question: "Q3?", rationale: "R3", inputType: "text", options: null, placeholder: null },
+              { question: "Q4?", rationale: "R4", inputType: "text", options: null, placeholder: null },
             ],
           },
+          immediateIdentification: null,
         };
 
         const result = strategicIdentificationSchema.safeParse(tooManyQuestions);
@@ -529,6 +546,7 @@ describe("Photo Identification Prompts", () => {
           question: "What material is the surface?",
           rationale: "Helps narrow product search",
           inputType: "text",
+          options: null,
           placeholder: "e.g., wood, glass, metal",
         };
 
@@ -542,6 +560,7 @@ describe("Photo Identification Prompts", () => {
           rationale: "Enables catalog search",
           inputType: "select",
           options: ["IKEA", "Wayfair", "Amazon", "Other"],
+          placeholder: null,
         };
 
         const result = clarificationQuestionSchema.safeParse(question);
@@ -556,7 +575,8 @@ describe("Photo Identification Prompts", () => {
             question: "Test question?",
             rationale: "Test rationale",
             inputType,
-            options: inputType === "select" ? ["Option 1", "Option 2"] : undefined,
+            options: inputType === "select" ? ["Option 1", "Option 2"] : null,
+            placeholder: null,
           };
 
           const result = clarificationQuestionSchema.safeParse(question);
@@ -569,6 +589,8 @@ describe("Photo Identification Prompts", () => {
           question: "Test?",
           rationale: "Test",
           inputType: "invalid_type",
+          options: null,
+          placeholder: null,
         };
 
         const result = clarificationQuestionSchema.safeParse(question);

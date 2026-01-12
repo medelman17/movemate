@@ -11,7 +11,7 @@ export const identificationOutputSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]),
   reasoning: z.string().describe("Detailed explanation of identification"),
   needsManualReview: z.boolean(),
-  clarificationQuestions: z.array(z.string()).optional(),
+  clarificationQuestions: z.array(z.string()).nullable().describe("Questions to ask user if unclear. Null if none needed."),
 });
 
 /**
@@ -69,9 +69,9 @@ export const clarificationQuestionSchema = z.object({
     .describe("Type of input expected from user"),
   options: z
     .array(z.string())
-    .optional()
-    .describe("For 'select' type: available options"),
-  placeholder: z.string().optional().describe("Placeholder text for text inputs"),
+    .nullable()
+    .describe("For 'select' type: available options. Null if not applicable."),
+  placeholder: z.string().nullable().describe("Placeholder text for text inputs. Null if not applicable."),
 });
 
 export type ClarificationQuestion = z.infer<typeof clarificationQuestionSchema>;
@@ -108,7 +108,7 @@ export const visualEstimatesSchema = z.object({
   }),
   weight: z.number().nullable().describe("Estimated weight in pounds"),
   canDisassemble: z.boolean().nullable().describe("Whether item can be disassembled"),
-  notes: z.string().optional().describe("Additional visual observations"),
+  notes: z.string().nullable().describe("Additional visual observations. Null if none."),
 });
 
 export type VisualEstimates = z.infer<typeof visualEstimatesSchema>;
@@ -138,7 +138,7 @@ export const strategicIdentificationSchema = z.object({
   distinctiveFeatures: z
     .array(z.string())
     .describe("Distinctive visual features (color, material, style, unique elements)"),
-  styleFamily: z.string().optional().describe("Design style (e.g., 'Mid-Century Modern', 'Industrial')"),
+  styleFamily: z.string().nullable().describe("Design style (e.g., 'Mid-Century Modern', 'Industrial'). Null if unclear."),
 
   // Visual estimates (always provided as fallback)
   visualEstimates: visualEstimatesSchema,
@@ -153,8 +153,8 @@ export const strategicIdentificationSchema = z.object({
       fullProductName: z.string().describe("Detailed name with brand/model if visible"),
       confidence: z.enum(["high", "medium", "low"]),
     })
-    .optional()
-    .describe("Immediate identification if brand/model visible in photo"),
+    .nullable()
+    .describe("Immediate identification if brand/model visible in photo. Null if uncertain."),
 });
 
 export type StrategicIdentification = z.infer<typeof strategicIdentificationSchema>;
