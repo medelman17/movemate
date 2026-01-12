@@ -85,12 +85,44 @@ lib/prompts/
 - `lib/supabase/client.ts` - Browser client using `createBrowserClient` for client components
 - `lib/supabase/server.ts` - Server client using `createServerClient` with cookie management
 
-**AI Integration:**
+**AI Integration (Vercel AI Gateway):**
 
-- Server actions in `app/actions/` use Vercel AI SDK (`ai` package)
-- `identify-from-photo.ts` - GPT-4o vision for item identification using prompts from [lib/prompts/photo-identification](lib/prompts/photo-identification/index.ts:1)
-- `product-research.ts` - Perplexity sonar-pro for web research using prompts from [lib/prompts/product-research](lib/prompts/product-research/index.ts:1)
-- `simplify-product-name.ts` - GPT-4o-mini for name simplification using prompt from [lib/prompts/utilities](lib/prompts/utilities/index.ts:1)
+This project uses **Vercel AI Gateway** for all AI calls. Always use the gateway instead of direct provider SDKs.
+
+```typescript
+// CORRECT: Use Vercel AI Gateway
+import { generateObject, createGateway } from "ai";
+
+const gateway = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY ?? "",
+});
+
+const { object } = await generateObject({
+  model: gateway("openai/gpt-4o"),  // provider/model format
+  schema: mySchema,
+  // ...
+});
+
+// INCORRECT: Do NOT use direct provider imports
+import { openai } from "@ai-sdk/openai";  // Don't do this
+model: openai("gpt-4o"),  // Don't do this
+```
+
+**Why AI Gateway:**
+- Centralized billing through Vercel (uses `AI_GATEWAY_API_KEY`)
+- Provider fallbacks and routing options
+- No need to manage individual API keys per provider
+- Better observability and rate limit handling
+
+**Model naming convention:** `provider/model-name`
+- `openai/gpt-4o` - GPT-4o for vision/complex tasks
+- `openai/gpt-4o-mini` - Fast, cheap tasks
+- `perplexity/sonar-pro` - Web search/research
+
+**Server Actions:**
+- `identify-from-photo-v2.ts` - GPT-4o vision for strategic item identification
+- `product-research.ts` - Perplexity sonar-pro for web research
+- `simplify-product-name.ts` - GPT-4o-mini for name simplification
 - Uses `generateObject` with Zod schemas from `lib/prompts/` for type-safe AI responses
 
 **UI Components:**
@@ -119,7 +151,11 @@ Images upload to Vercel Blob via `POST /api/upload`, with client-side preprocess
 
 ## Environment Variables
 
-Required Supabase and OpenAI configuration. Check `.env.local` for required keys.
+Required configuration in `.env.local`:
+- `AI_GATEWAY_API_KEY` - Vercel AI Gateway authentication (primary AI access)
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase client
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase server-side operations
+- `BLOB_READ_WRITE_TOKEN` - Vercel Blob for image uploads
 
 ## Important Notes
 
