@@ -1,9 +1,10 @@
 ---
 id: task-4
 title: Implement centralized prompt management system
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:23'
+updated_date: '2026-01-12 21:14'
 labels:
   - refactor
   - dx

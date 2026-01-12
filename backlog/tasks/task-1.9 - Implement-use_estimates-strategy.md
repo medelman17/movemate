@@ -1,9 +1,10 @@
 ---
 id: task-1.9
 title: Implement use_estimates strategy
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:01'
+updated_date: '2026-01-12 21:14'
 labels:
   - feature
 dependencies: []

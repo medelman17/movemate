@@ -1,9 +1,10 @@
 ---
 id: task-4.25
 title: Write unit tests for product research prompts
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-12 21:14'
 labels:
   - prompts
   - testing

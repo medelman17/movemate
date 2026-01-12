@@ -1,9 +1,10 @@
 ---
 id: task-1.2
 title: Design single-pass prompt for photo analysis
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:01'
+updated_date: '2026-01-12 21:14'
 labels:
   - ai
   - prompt-engineering

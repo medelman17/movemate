@@ -1,9 +1,10 @@
 ---
 id: task-1.12
 title: Update product-research.ts to accept rich context
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:01'
+updated_date: '2026-01-12 21:14'
 labels:
   - ai
   - refactor

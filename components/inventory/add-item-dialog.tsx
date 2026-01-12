@@ -21,7 +21,11 @@ import { Plus, Sparkles, Loader2, Camera, X, HelpCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemFormData } from "@/lib/types"
 import { researchProduct } from "@/app/actions/product-research"
-import { identifyProductFromPhotoV2Compat as identifyProductFromPhoto } from "@/app/actions/identify-from-photo-v2"
+import {
+  identifyProductFromPhotoV2,
+  type StrategicIdentificationResult,
+} from "@/app/actions/identify-from-photo-v2"
+import type { ClarificationQuestion } from "@/lib/prompts/photo-identification"
 import { useToast } from "@/hooks/use-toast"
 
 const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
@@ -36,6 +40,71 @@ const COMPRESSION_QUALITY = 0.85 // JPEG compression quality
 
 interface AddItemDialogProps {
   onItemAdded: () => void
+}
+
+/**
+ * Renders a clarification question with the appropriate input type.
+ */
+interface ClarificationQuestionInputProps {
+  question: ClarificationQuestion
+  value: string
+  onChange: (value: string) => void
+  disabled?: boolean
+}
+
+function ClarificationQuestionInput({
+  question,
+  value,
+  onChange,
+  disabled = false,
+}: ClarificationQuestionInputProps) {
+  const inputId = `question-${question.question.slice(0, 20).replace(/\s+/g, "-")}`
+
+  switch (question.inputType) {
+    case "select":
+      return (
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
+          <SelectTrigger id={inputId} className="bg-white dark:bg-gray-900">
+            <SelectValue placeholder="Select an option..." />
+          </SelectTrigger>
+          <SelectContent>
+            {question.options?.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+            <SelectItem value="__other__">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      )
+
+    case "number":
+      return (
+        <Input
+          id={inputId}
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={question.placeholder || "Enter a number..."}
+          disabled={disabled}
+          className="bg-white dark:bg-gray-900"
+        />
+      )
+
+    case "text":
+    default:
+      return (
+        <Input
+          id={inputId}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={question.placeholder || "Enter your answer..."}
+          disabled={disabled}
+          className="bg-white dark:bg-gray-900"
+        />
+      )
+  }
 }
 
 async function getImageOrientation(file: File): Promise<number> {
@@ -318,9 +387,13 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false)
   const [processingStage, setProcessingStage] = useState<string>("")
   const [clarificationNeeded, setClarificationNeeded] = useState(false)
-  const [clarificationQuestions, setClarificationQuestions] = useState<string[]>([])
-  const [clarificationAnswers, setClarificationAnswers] = useState<string>("")
   const [clarificationPhotos, setClarificationPhotos] = useState<string[]>([])
+  // V2: Store full result for multi-round clarification flow
+  const [pendingResult, setPendingResult] = useState<StrategicIdentificationResult | null>(null)
+  // V2: Track structured answers by question text
+  const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({})
+  // V2: Track clarification round (max 2)
+  const [clarificationRound, setClarificationRound] = useState(0)
   const { toast } = useToast()
   const [formData, setFormData] = useState<Partial<ItemFormData>>({
     name: "",
@@ -337,17 +410,76 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     photo_url: null,
   })
 
+  // Helper to apply estimates from v2 result to form
+  const applyEstimates = (result: StrategicIdentificationResult) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: result.estimates.itemType,
+      category: result.estimates.category || prev.category,
+      weight: result.estimates.weight ?? prev.weight,
+      length: result.estimates.dimensions.length ?? prev.length,
+      width: result.estimates.dimensions.width ?? prev.width,
+      height: result.estimates.dimensions.height ?? prev.height,
+      can_disassemble: result.estimates.canDisassemble ?? prev.can_disassemble,
+    }))
+  }
+
+  // Helper to proceed with product research after identification
+  const proceedWithResearch = async (productName: string) => {
+    setProcessingStage("Searching web for specifications...")
+    setIsResearching(true)
+
+    try {
+      const productInfo = await researchProduct(productName)
+
+      setFormData((prev) => ({
+        ...prev,
+        name: productInfo.name || productName,
+        description: productInfo.description || prev.description,
+        category: productInfo.category || prev.category,
+        weight: productInfo.weight ?? prev.weight,
+        length: productInfo.dimensions.length ?? prev.length,
+        width: productInfo.dimensions.width ?? prev.width,
+        height: productInfo.dimensions.height ?? prev.height,
+        can_disassemble: productInfo.canDisassemble ?? prev.can_disassemble,
+      }))
+
+      toast({
+        title: "Product identified and researched!",
+        description: `Found specifications for ${productInfo.name || productName}`,
+      })
+    } catch (researchError) {
+      console.error("Error researching product:", researchError)
+
+      setFormData((prev) => ({
+        ...prev,
+        name: productName,
+      }))
+
+      toast({
+        title: "Product identified",
+        description: `Found: ${productName}. Could not auto-fill specifications - please enter manually.`,
+      })
+    } finally {
+      setProcessingStage("")
+      setIsAnalyzingPhoto(false)
+      setIsResearching(false)
+    }
+  }
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    console.log("[v0] Starting image validation for file:", file.name, file.type, file.size)
+    console.log("[v2] Starting image validation for file:", file.name, file.type, file.size)
 
     setProcessingStage("Validating image...")
     setIsAnalyzingPhoto(true)
+    // Reset clarification state for new photo
     setClarificationNeeded(false)
-    setClarificationQuestions([])
-    setClarificationAnswers("")
+    setPendingResult(null)
+    setStructuredAnswers({})
+    setClarificationRound(0)
     setClarificationPhotos([])
 
     const validation = await validateImage(file)
@@ -362,7 +494,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       return
     }
 
-    console.log("[v0] Image validation passed")
+    console.log("[v2] Image validation passed")
 
     try {
       setProcessingStage("Processing image...")
@@ -372,12 +504,27 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       setProcessingStage("Identifying product with AI...")
 
       try {
-        const result = await identifyProductFromPhoto(processedImage)
+        const result = await identifyProductFromPhotoV2(processedImage)
 
-        if (typeof result === "object" && "needsClarification" in result) {
-          console.log("[v0] AI requesting clarification from user")
+        console.log("[v2] Identification result:", {
+          identified: !!result.identified,
+          confidence: result.identified?.confidence,
+          questionsCount: result.questions?.length ?? 0,
+          strategy: result.strategy.approach,
+        })
+
+        // Case 1: High confidence identification - proceed to research
+        if (result.identified && result.identified.confidence === "high") {
+          await proceedWithResearch(result.identified.fullProductName)
+          return
+        }
+
+        // Case 2: Questions available - show clarification UI
+        if (result.questions && result.questions.length > 0) {
+          console.log("[v2] AI requesting clarification from user")
+          setPendingResult(result)
           setClarificationNeeded(true)
-          setClarificationQuestions(result.questions)
+          setClarificationRound(1)
           setProcessingStage("")
           setIsAnalyzingPhoto(false)
           toast({
@@ -387,51 +534,21 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
           return
         }
 
-        const productName = result as string
-
-        setProcessingStage("Searching web for specifications...")
-        setIsResearching(true)
-
-        try {
-          const productInfo = await researchProduct(productName)
-
-          setFormData((prev) => ({
-            ...prev,
-            name: productInfo.name || productName,
-            description: productInfo.description || prev.description,
-            category: productInfo.category || prev.category,
-            weight: productInfo.weight ?? prev.weight,
-            length: productInfo.dimensions.length ?? prev.length,
-            width: productInfo.dimensions.width ?? prev.width,
-            height: productInfo.dimensions.height ?? prev.height,
-            can_disassemble: productInfo.canDisassemble ?? prev.can_disassemble,
-          }))
-
-          setProcessingStage("")
-          setIsAnalyzingPhoto(false)
-          setIsResearching(false)
-
-          toast({
-            title: "Product identified and researched!",
-            description: `Found specifications for ${productInfo.name || productName}`,
-          })
-        } catch (researchError) {
-          console.error("Error researching product:", researchError)
-
-          setFormData((prev) => ({
-            ...prev,
-            name: productName,
-          }))
-
-          setProcessingStage("")
-          setIsAnalyzingPhoto(false)
-          setIsResearching(false)
-
-          toast({
-            title: "Product identified",
-            description: `Found: ${productName}. Could not auto-fill specifications - please enter manually.`,
-          })
+        // Case 3: Medium confidence identification - proceed with research
+        if (result.identified) {
+          await proceedWithResearch(result.identified.fullProductName)
+          return
         }
+
+        // Case 4: No identification, no questions - use estimates
+        console.log("[v2] Using visual estimates directly")
+        applyEstimates(result)
+        setProcessingStage("")
+        setIsAnalyzingPhoto(false)
+        toast({
+          title: "Item analyzed",
+          description: "Using visual estimates. You can refine the details below.",
+        })
       } catch (error) {
         console.error("Error identifying product:", error)
         setProcessingStage("")
@@ -500,96 +617,119 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     }
   }
 
+  // V2: Handle skip clarification - use estimates directly
+  const handleSkipClarification = () => {
+    if (!pendingResult) return
+
+    console.log("[v2] User skipped clarification, using estimates")
+    applyEstimates(pendingResult)
+    setClarificationNeeded(false)
+    setPendingResult(null)
+    setStructuredAnswers({})
+    setClarificationPhotos([])
+
+    toast({
+      title: "Using visual estimates",
+      description: "You can refine the details below.",
+    })
+  }
+
+  // V2: Handle clarification submit with structured answers
   const handleClarificationSubmit = async () => {
-    if (!uploadedPhoto || (!clarificationAnswers.trim() && clarificationPhotos.length === 0)) {
+    if (!uploadedPhoto || !pendingResult) {
+      return
+    }
+
+    // Check if any answers provided
+    const hasAnswers = Object.values(structuredAnswers).some((v) => v.trim() !== "")
+    if (!hasAnswers && clarificationPhotos.length === 0) {
       toast({
         title: "Please provide information",
-        description: "Enter answers or upload additional photos to help with identification.",
+        description: "Answer at least one question or upload additional photos.",
         variant: "destructive",
       })
       return
     }
 
     setIsAnalyzingPhoto(true)
-    setProcessingStage("Re-analyzing with your input...")
+    setProcessingStage("Re-analyzing with your answers...")
     setClarificationNeeded(false)
 
     try {
-      let contextMessage = clarificationAnswers.trim()
+      // Build context from photos if any
+      let userContext: string | undefined
       if (clarificationPhotos.length > 0) {
-        contextMessage += `\n\nUser provided ${clarificationPhotos.length} additional photo(s) showing different angles/details.`
+        userContext = `User provided ${clarificationPhotos.length} additional photo(s) showing different angles/details.`
       }
 
-      const result = await identifyProductFromPhoto(uploadedPhoto, contextMessage)
+      // Call v2 API with structured answers
+      const result = await identifyProductFromPhotoV2(
+        uploadedPhoto,
+        userContext,
+        structuredAnswers
+      )
 
-      if (typeof result === "object" && "needsClarification" in result) {
+      const nextRound = clarificationRound + 1
+      setClarificationRound(nextRound)
+
+      console.log("[v2] Re-identification result:", {
+        identified: !!result.identified,
+        confidence: result.identified?.confidence,
+        questionsCount: result.questions?.length ?? 0,
+        round: nextRound,
+      })
+
+      // Case 1: Got identification - proceed to research
+      if (result.identified && result.identified.confidence !== "low") {
+        await proceedWithResearch(result.identified.fullProductName)
+        setStructuredAnswers({})
+        setClarificationPhotos([])
+        return
+      }
+
+      // Case 2: More questions and under round limit - ask again
+      if (result.questions && result.questions.length > 0 && nextRound < 2) {
+        setPendingResult(result)
         setClarificationNeeded(true)
-        setClarificationQuestions(result.questions)
+        setStructuredAnswers({}) // Reset for new questions
         setProcessingStage("")
         setIsAnalyzingPhoto(false)
         toast({
-          title: "Need more details",
-          description: "Please provide additional information.",
+          title: "Need a bit more info",
+          description: "One more round of questions to help narrow it down.",
         })
         return
       }
 
-      const productName = result as string
+      // Case 3: Max rounds reached or no more questions - use estimates
+      console.log("[v2] Max rounds reached or no questions, using estimates")
+      applyEstimates(result)
+      setProcessingStage("")
+      setIsAnalyzingPhoto(false)
+      setStructuredAnswers({})
+      setClarificationPhotos([])
+      setPendingResult(null)
 
-      setProcessingStage("Searching web for specifications...")
-      setIsResearching(true)
-
-      try {
-        const productInfo = await researchProduct(productName)
-
-        setFormData((prev) => ({
-          ...prev,
-          name: productInfo.name || productName,
-          description: productInfo.description || prev.description,
-          category: productInfo.category || prev.category,
-          weight: productInfo.weight ?? prev.weight,
-          length: productInfo.dimensions.length ?? prev.length,
-          width: productInfo.dimensions.width ?? prev.width,
-          height: productInfo.dimensions.height ?? prev.height,
-          can_disassemble: productInfo.canDisassemble ?? prev.can_disassemble,
-        }))
-
-        setProcessingStage("")
-        setIsAnalyzingPhoto(false)
-        setIsResearching(false)
-        setClarificationAnswers("")
-        setClarificationPhotos([])
-
-        toast({
-          title: "Product identified and researched!",
-          description: `Found specifications for ${productInfo.name || productName}`,
-        })
-      } catch (researchError) {
-        console.error("Error researching product:", researchError)
-
-        setFormData((prev) => ({
-          ...prev,
-          name: productName,
-        }))
-
-        setProcessingStage("")
-        setIsAnalyzingPhoto(false)
-        setIsResearching(false)
-        setClarificationAnswers("")
-        setClarificationPhotos([])
-
-        toast({
-          title: "Product identified",
-          description: `Found: ${productName}. Could not auto-fill specifications - please enter manually.`,
-        })
-      }
+      toast({
+        title: nextRound >= 2 ? "Max rounds reached" : "Item analyzed",
+        description: "Using visual estimates. You can refine the details below.",
+      })
     } catch (error) {
       console.error("Error re-identifying product:", error)
       setProcessingStage("")
       setIsAnalyzingPhoto(false)
+
+      // Fall back to estimates on error
+      if (pendingResult) {
+        applyEstimates(pendingResult)
+        setPendingResult(null)
+        setStructuredAnswers({})
+        setClarificationPhotos([])
+      }
+
       toast({
-        title: "Still unable to identify",
-        description: "Please enter the product name manually.",
+        title: "Analysis failed",
+        description: "Using visual estimates. You can refine the details below.",
         variant: "destructive",
       })
     }
@@ -597,6 +737,9 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
   const clearPhoto = () => {
     setUploadedPhoto(null)
+    setPendingResult(null)
+    setStructuredAnswers({})
+    setClarificationRound(0)
   }
 
   const handleAIResearch = async () => {
@@ -753,85 +896,169 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             )}
 
-            {clarificationNeeded && clarificationQuestions.length > 0 && (
+            {clarificationNeeded && pendingResult?.questions && pendingResult.questions.length > 0 && (
               <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-amber-900 mb-2">Help us identify this product</h4>
-                    <ul className="space-y-1 text-sm text-amber-800 mb-3">
-                      {clarificationQuestions.map((q, i) => (
-                        <li key={i}>• {q}</li>
-                      ))}
-                    </ul>
+                  <div className="flex-1 space-y-4">
+                    {/* Header with strategy info */}
+                    <div>
+                      <h4 className="font-medium text-amber-900 dark:text-amber-100">
+                        Help us identify this product
+                      </h4>
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                        Strategy: {pendingResult.strategy.approach.replace(/_/g, " ")}
+                        {clarificationRound > 1 && ` (Round ${clarificationRound}/2)`}
+                      </p>
+                    </div>
 
-                    <div className="space-y-3">
-                      <Textarea
-                        value={clarificationAnswers}
-                        onChange={(e) => setClarificationAnswers(e.target.value)}
-                        placeholder="Type your answers here..."
-                        className="min-h-[80px] bg-white"
-                      />
-
-                      <div className="space-y-2">
-                        <Label className="text-sm text-amber-900">Or upload additional photos</Label>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById("clarification-photo-input")?.click()}
+                    {/* Rich question inputs */}
+                    <div className="space-y-4">
+                      {pendingResult.questions.map((question, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <Label className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                            {question.question}
+                          </Label>
+                          <ClarificationQuestionInput
+                            question={question}
+                            value={structuredAnswers[question.question] || ""}
+                            onChange={(value) =>
+                              setStructuredAnswers((prev) => ({
+                                ...prev,
+                                [question.question]: value,
+                              }))
+                            }
                             disabled={isAnalyzingPhoto}
-                            className="border-amber-300"
-                          >
-                            <Camera className="h-4 w-4 mr-2" />
-                            Add Photo
-                          </Button>
-                          <Input
-                            id="clarification-photo-input"
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleClarificationPhotoUpload}
-                            className="hidden"
                           />
-                          {clarificationPhotos.length > 0 && (
-                            <span className="text-sm text-amber-700">
-                              {clarificationPhotos.length} photo{clarificationPhotos.length > 1 ? "s" : ""} added
-                            </span>
+                          {question.rationale && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 italic">
+                              {question.rationale}
+                            </p>
                           )}
                         </div>
+                      ))}
+                    </div>
 
-                        {clarificationPhotos.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2 mt-2">
-                            {clarificationPhotos.map((photo, idx) => (
-                              <div key={idx} className="relative group">
-                                <img
-                                  src={photo || "/placeholder.svg"}
-                                  alt={`Additional view ${idx + 1}`}
-                                  className="w-full h-20 object-cover rounded border border-amber-200"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => {
-                                    setClarificationPhotos((prev) => prev.filter((_, i) => i !== idx))
-                                  }}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
+                    {/* Estimates preview section */}
+                    <div className="bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-700 rounded-md p-3">
+                      <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        Current Estimates
+                      </h5>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Type:</span>{" "}
+                          <span className="text-gray-900 dark:text-gray-100">
+                            {pendingResult.estimates.itemType}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Category:</span>{" "}
+                          <span className="text-gray-900 dark:text-gray-100">
+                            {pendingResult.estimates.category}
+                          </span>
+                        </div>
+                        {(pendingResult.estimates.dimensions.length ||
+                          pendingResult.estimates.dimensions.width ||
+                          pendingResult.estimates.dimensions.height) && (
+                          <div className="col-span-2">
+                            <span className="text-gray-500 dark:text-gray-400">Dimensions:</span>{" "}
+                            <span className="text-gray-900 dark:text-gray-100">
+                              ~{pendingResult.estimates.dimensions.length || "?"}″ ×{" "}
+                              {pendingResult.estimates.dimensions.width || "?"}″ ×{" "}
+                              {pendingResult.estimates.dimensions.height || "?"}″
+                            </span>
+                          </div>
+                        )}
+                        {pendingResult.estimates.weight && (
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Weight:</span>{" "}
+                            <span className="text-gray-900 dark:text-gray-100">
+                              ~{pendingResult.estimates.weight} lbs
+                            </span>
                           </div>
                         )}
                       </div>
+                      {pendingResult.features.length > 0 && (
+                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          Features: {pendingResult.features.slice(0, 3).join(", ")}
+                        </div>
+                      )}
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        These will be used if we can't identify the exact product.
+                      </p>
+                    </div>
 
+                    {/* Additional photos section */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById("clarification-photo-input")?.click()}
+                          disabled={isAnalyzingPhoto}
+                          className="border-amber-300 dark:border-amber-700"
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          Add Photo
+                        </Button>
+                        <Input
+                          id="clarification-photo-input"
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleClarificationPhotoUpload}
+                          className="hidden"
+                        />
+                        {clarificationPhotos.length > 0 && (
+                          <span className="text-sm text-amber-700 dark:text-amber-400">
+                            {clarificationPhotos.length} photo{clarificationPhotos.length > 1 ? "s" : ""} added
+                          </span>
+                        )}
+                      </div>
+
+                      {clarificationPhotos.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {clarificationPhotos.map((photo, idx) => (
+                            <div key={idx} className="relative group">
+                              <img
+                                src={photo || "/placeholder.svg"}
+                                alt={`Additional view ${idx + 1}`}
+                                className="w-full h-20 object-cover rounded border border-amber-200 dark:border-amber-700"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => {
+                                  setClarificationPhotos((prev) => prev.filter((_, i) => i !== idx))
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2">
                       <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleSkipClarification}
+                        disabled={isAnalyzingPhoto}
+                        className="flex-1 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                      >
+                        Skip & Use Estimates
+                      </Button>
+                      <Button
+                        type="button"
                         onClick={handleClarificationSubmit}
                         disabled={isAnalyzingPhoto}
-                        className="w-full bg-amber-600 hover:bg-amber-700"
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
                       >
                         {isAnalyzingPhoto ? (
                           <>
@@ -839,7 +1066,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                             Analyzing...
                           </>
                         ) : (
-                          "Submit & Re-analyze"
+                          "Submit Answers"
                         )}
                       </Button>
                     </div>

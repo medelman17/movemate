@@ -1,9 +1,10 @@
 ---
 id: task-4.31
 title: Archive task-3 (superseded by task-4)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-12 21:15'
 labels:
   - cleanup
 dependencies: []

@@ -1,9 +1,10 @@
 ---
 id: task-1.15
 title: Identify and update UI components that consume identification
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:01'
+updated_date: '2026-01-12 21:14'
 labels:
   - ui
   - refactor
