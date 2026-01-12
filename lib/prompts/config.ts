@@ -8,9 +8,10 @@ export const modelConfigs = {
   /**
    * Vision model for photo analysis.
    * Used by: photo identification prompts
+   * Note: Gemini 3 Flash offers ~70-80% cost savings vs GPT-4o with comparable quality
    */
   vision: {
-    model: "openai/gpt-4o",
+    model: "google/gemini-3-flash",
     maxTokens: 400,
     temperature: 0.3,
   } satisfies ModelConfig,
