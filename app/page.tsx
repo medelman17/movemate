@@ -159,10 +159,10 @@ export default function HomePage() {
     a.click()
   }
 
-  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0)
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0) * item.quantity, 0)
   const totalVolume = items.reduce((sum, item) => {
     if (item.length && item.width && item.height) {
-      return sum + (item.length * item.width * item.height) / 1728 // Convert to cubic feet
+      return sum + ((item.length * item.width * item.height) / 1728) * item.quantity // Convert to cubic feet and multiply by quantity
     }
     return sum
   }, 0)

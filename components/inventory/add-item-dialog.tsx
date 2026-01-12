@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Sparkles, Loader2, Camera, X } from "lucide-react"
+import { Plus, Sparkles, Loader2, Camera, X, HelpCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemFormData } from "@/lib/types"
 import { researchProduct } from "@/app/actions/product-research"
@@ -316,6 +316,10 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   const [isResearching, setIsResearching] = useState(false)
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null)
   const [isAnalyzingPhoto, setIsAnalyzingPhoto] = useState(false)
+  const [processingStage, setProcessingStage] = useState<string>("")
+  const [clarificationNeeded, setClarificationNeeded] = useState(false)
+  const [clarificationQuestions, setClarificationQuestions] = useState<string[]>([])
+  const [clarificationAnswers, setClarificationAnswers] = useState<string>("")
   const { toast } = useToast()
   const [formData, setFormData] = useState<Partial<ItemFormData>>({
     name: "",
@@ -338,8 +342,16 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
     console.log("[v0] Starting image validation for file:", file.name, file.type, file.size)
 
+    setProcessingStage("Validating image...")
+    setIsAnalyzingPhoto(true)
+    setClarificationNeeded(false)
+    setClarificationQuestions([])
+    setClarificationAnswers("")
+
     const validation = await validateImage(file)
     if (!validation.valid) {
+      setIsAnalyzingPhoto(false)
+      setProcessingStage("")
       toast({
         title: "Invalid image",
         description: validation.error,
@@ -350,24 +362,79 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
     console.log("[v0] Image validation passed")
 
-    setIsAnalyzingPhoto(true)
     try {
+      setProcessingStage("Processing image...")
       const processedImage = await preprocessImage(file)
       setUploadedPhoto(processedImage)
 
-      try {
-        const productName = await identifyProductFromPhoto(processedImage)
-        setFormData((prev) => ({
-          ...prev,
-          name: productName,
-        }))
+      setProcessingStage("Identifying product with AI...")
 
-        toast({
-          title: "Product identified!",
-          description: `Found: ${productName}. Click Auto-fill to get specifications.`,
-        })
+      try {
+        const result = await identifyProductFromPhoto(processedImage)
+
+        if (typeof result === "object" && "needsClarification" in result) {
+          console.log("[v0] AI requesting clarification from user")
+          setClarificationNeeded(true)
+          setClarificationQuestions(result.questions)
+          setProcessingStage("")
+          setIsAnalyzingPhoto(false)
+          toast({
+            title: "Need more information",
+            description: "Please answer a few questions to help identify the product.",
+          })
+          return
+        }
+
+        const productName = result as string
+
+        setProcessingStage("Searching web for specifications...")
+        setIsResearching(true)
+
+        try {
+          const productInfo = await researchProduct(productName)
+
+          setFormData((prev) => ({
+            ...prev,
+            name: productInfo.name || productName,
+            description: productInfo.description || prev.description,
+            category: productInfo.category || prev.category,
+            weight: productInfo.weight ?? prev.weight,
+            length: productInfo.dimensions.length ?? prev.length,
+            width: productInfo.dimensions.width ?? prev.width,
+            height: productInfo.dimensions.height ?? prev.height,
+            can_disassemble: productInfo.canDisassemble ?? prev.can_disassemble,
+          }))
+
+          setProcessingStage("")
+          setIsAnalyzingPhoto(false)
+          setIsResearching(false)
+
+          toast({
+            title: "Product identified and researched!",
+            description: `Found specifications for ${productInfo.name || productName}`,
+          })
+        } catch (researchError) {
+          console.error("Error researching product:", researchError)
+
+          setFormData((prev) => ({
+            ...prev,
+            name: productName,
+          }))
+
+          setProcessingStage("")
+          setIsAnalyzingPhoto(false)
+          setIsResearching(false)
+
+          toast({
+            title: "Product identified",
+            description: `Found: ${productName}. Could not auto-fill specifications - please enter manually.`,
+          })
+        }
       } catch (error) {
         console.error("Error identifying product:", error)
+        setProcessingStage("")
+        setIsAnalyzingPhoto(false)
+
         const errorMessage =
           error instanceof Error && error.message.includes("unclear")
             ? "Image is unclear or contains multiple items. Please enter the product name manually."
@@ -378,15 +445,102 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
           description: errorMessage,
           variant: "destructive",
         })
-      } finally {
-        setIsAnalyzingPhoto(false)
       }
     } catch (error) {
       console.error("Error processing photo:", error)
       setIsAnalyzingPhoto(false)
+      setProcessingStage("")
       toast({
         title: "Processing failed",
         description: "Could not process the image. Please try again with a different image.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleClarificationSubmit = async () => {
+    if (!uploadedPhoto || !clarificationAnswers.trim()) {
+      toast({
+        title: "Please provide answers",
+        description: "Enter information about the product to help with identification.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsAnalyzingPhoto(true)
+    setProcessingStage("Re-analyzing with your input...")
+    setClarificationNeeded(false)
+
+    try {
+      const result = await identifyProductFromPhoto(uploadedPhoto, clarificationAnswers)
+
+      if (typeof result === "object" && "needsClarification" in result) {
+        setClarificationNeeded(true)
+        setClarificationQuestions(result.questions)
+        setProcessingStage("")
+        setIsAnalyzingPhoto(false)
+        toast({
+          title: "Need more details",
+          description: "Please provide additional information.",
+        })
+        return
+      }
+
+      const productName = result as string
+
+      setProcessingStage("Searching web for specifications...")
+      setIsResearching(true)
+
+      try {
+        const productInfo = await researchProduct(productName)
+
+        setFormData((prev) => ({
+          ...prev,
+          name: productInfo.name || productName,
+          description: productInfo.description || prev.description,
+          category: productInfo.category || prev.category,
+          weight: productInfo.weight ?? prev.weight,
+          length: productInfo.dimensions.length ?? prev.length,
+          width: productInfo.dimensions.width ?? prev.width,
+          height: productInfo.dimensions.height ?? prev.height,
+          can_disassemble: productInfo.canDisassemble ?? prev.can_disassemble,
+        }))
+
+        setProcessingStage("")
+        setIsAnalyzingPhoto(false)
+        setIsResearching(false)
+        setClarificationAnswers("")
+
+        toast({
+          title: "Product identified and researched!",
+          description: `Found specifications for ${productInfo.name || productName}`,
+        })
+      } catch (researchError) {
+        console.error("Error researching product:", researchError)
+
+        setFormData((prev) => ({
+          ...prev,
+          name: productName,
+        }))
+
+        setProcessingStage("")
+        setIsAnalyzingPhoto(false)
+        setIsResearching(false)
+        setClarificationAnswers("")
+
+        toast({
+          title: "Product identified",
+          description: `Found: ${productName}. Could not auto-fill specifications - please enter manually.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error re-identifying product:", error)
+      setProcessingStage("")
+      setIsAnalyzingPhoto(false)
+      toast({
+        title: "Still unable to identify",
+        description: "Please enter the product name manually.",
         variant: "destructive",
       })
     }
@@ -502,6 +656,71 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            {isAnalyzingPhoto && processingStage && (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">{processingStage}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {processingStage.includes("Validating") && "Checking image format and quality..."}
+                    {processingStage.includes("Processing") && "Optimizing image for AI analysis..."}
+                    {processingStage.includes("Identifying") && "Using AI vision to identify the product..."}
+                    {processingStage.includes("Searching") && "Searching web for specifications..."}
+                    {processingStage.includes("Re-analyzing") && "Analyzing with your additional context..."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {clarificationNeeded && clarificationQuestions.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        Help us identify this product
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                        Please answer any of these questions to improve identification:
+                      </p>
+                    </div>
+                    <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
+                      {clarificationQuestions.map((question, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-600 dark:text-amber-400">•</span>
+                          <span>{question}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Type your answers here... (e.g., 'It's an IKEA bookshelf from the living room')"
+                        value={clarificationAnswers}
+                        onChange={(e) => setClarificationAnswers(e.target.value)}
+                        className="min-h-[80px] bg-white dark:bg-gray-950"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleClarificationSubmit}
+                        disabled={!clarificationAnswers.trim() || isAnalyzingPhoto}
+                        className="w-full"
+                      >
+                        {isAnalyzingPhoto ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          "Submit Information"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label>Product Photo (Optional)</Label>
               {uploadedPhoto ? (
@@ -517,6 +736,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                     size="icon"
                     className="absolute top-2 right-2"
                     onClick={clearPhoto}
+                    disabled={isAnalyzingPhoto}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -541,7 +761,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                     {isAnalyzingPhoto ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Analyzing photo...
+                        Processing...
                       </>
                     ) : (
                       <>
@@ -567,13 +787,14 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., IKEA Besta TV Unit or product URL"
                   className="flex-1"
+                  disabled={isAnalyzingPhoto}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   onClick={handleAIResearch}
-                  disabled={isResearching || !formData.name?.trim()}
+                  disabled={isResearching || !formData.name?.trim() || isAnalyzingPhoto}
                   className="gap-2 shrink-0"
                 >
                   {isResearching ? (
