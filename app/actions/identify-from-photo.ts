@@ -1,139 +1,138 @@
-"use server"
+"use server";
 
-import { generateText } from "ai"
+import { generateText } from "ai";
+
+/**
+ * Here, a user takes a picture of some item in their apartment, like a couch,
+ * tv, chair, etc., uploads it via our application to be included on move manifest,
+ * and we try to figure out, with as much precision as possible,
+ * what it is, so that we can then search for its weight, dimensions, etc.
+ */
 
 interface IdentificationResult {
-  productName: string
-  fullProductName: string // Added to preserve detailed product name
-  confidence: "high" | "medium" | "low"
-  reasoning: string
-  needsManualReview: boolean
-  clarificationQuestions?: string[]
-}
-
-function simplifyProductName(fullName: string): string {
-  // Remove brand names (common furniture brands)
-  const brandPatterns = [
-    /^IKEA\s+/i,
-    /^KALLAX\s+/i,
-    /^HEMNES\s+/i,
-    /^REGISSÖR\s+/i,
-    /^LAGKAPTEN\s+/i,
-    /^HOMCOM\s+/i,
-    /^Yaheetech\s+/i,
-    /^Michigan\s+/i,
-    /\s+by\s+[A-Z][a-z]+/gi,
-    /^[A-Z][a-z]+\s+Velvet\s+/i,
-  ]
-
-  let simplified = fullName
-  brandPatterns.forEach((pattern) => {
-    simplified = simplified.replace(pattern, "")
-  })
-
-  // Remove measurements from the beginning
-  simplified = simplified.replace(/^\d+[\d./"'\s-]*\s+/, "")
-
-  // Remove specific colors/materials/styles in parentheses or at the end
-  simplified = simplified.replace(/\s*$$[^)]+$$\s*/g, " ")
-  simplified = simplified.replace(/\s*-\s*[A-Z][a-z]+\s*$/, "")
-
-  // Remove extra descriptive words
-  simplified = simplified
-    .replace(/\s+(Golden Bronze|Dark Blue|Cream White)\s*/gi, " ")
-    .replace(/\s+with\s+.*/i, "")
-    .replace(/,\s+white$/i, "")
-    .replace(/,\s+\d+x\d+.*$/i, "")
-
-  // Clean up spacing
-  simplified = simplified.replace(/\s+/g, " ").trim()
-
-  // Capitalize first letter
-  simplified = simplified.charAt(0).toUpperCase() + simplified.slice(1)
-
-  return simplified
+  productName: string;
+  fullProductName: string; // Added to preserve detailed product name
+  confidence: "high" | "medium" | "low";
+  reasoning: string;
+  needsManualReview: boolean;
+  clarificationQuestions?: string[];
 }
 
 export async function identifyProductFromPhoto(
   imageUrl: string,
-  userContext?: string,
+  userContext?: string
 ): Promise<string | { needsClarification: true; questions: string[] }> {
   try {
-    console.log("[v0] Analyzing product photo...", userContext ? "with user context" : "")
+    console.log(
+      "[v0] Analyzing product photo...",
+      userContext ? "with user context" : ""
+    );
 
-    const hasAdditionalPhotos = userContext?.includes("additional photo")
+    const hasAdditionalPhotos = userContext?.includes("additional photo");
 
-    const firstAttempt = await attemptIdentification(imageUrl, "detailed", userContext)
+    const firstAttempt = await attemptIdentification(
+      imageUrl,
+      "detailed",
+      userContext
+    );
 
     if (firstAttempt.confidence === "high") {
-      console.log("[v0] High confidence identification:", firstAttempt.fullProductName)
-      return firstAttempt.fullProductName
+      console.log(
+        "[v0] High confidence identification:",
+        firstAttempt.fullProductName
+      );
+      return firstAttempt.fullProductName;
     }
 
-    if (firstAttempt.clarificationQuestions && firstAttempt.clarificationQuestions.length > 0) {
+    if (
+      firstAttempt.clarificationQuestions &&
+      firstAttempt.clarificationQuestions.length > 0
+    ) {
       // If user already gave context but we still need help, AND they haven't uploaded extra photos yet
       if (userContext && !hasAdditionalPhotos) {
-        console.log("[v0] User provided context but still unclear - requesting photos specifically")
+        console.log(
+          "[v0] User provided context but still unclear - requesting photos specifically"
+        );
         return {
           needsClarification: true,
           questions: [
             "Can you take another photo from a different angle?",
             "Is there a brand name or label visible from another side?",
           ],
-        }
+        };
       }
 
       // First time asking for help
       if (!userContext) {
-        console.log("[v0] Low confidence, requesting clarification from user")
+        console.log("[v0] Low confidence, requesting clarification from user");
         return {
           needsClarification: true,
           questions: firstAttempt.clarificationQuestions,
-        }
+        };
       }
     }
 
-    console.log("[v0] First attempt confidence low, trying alternative approach...")
-    const secondAttempt = await attemptIdentification(imageUrl, "visual", userContext)
+    console.log(
+      "[v0] First attempt confidence low, trying alternative approach..."
+    );
+    const secondAttempt = await attemptIdentification(
+      imageUrl,
+      "visual",
+      userContext
+    );
 
-    if (secondAttempt.confidence === "high" || secondAttempt.confidence === "medium") {
-      console.log("[v0] Second attempt successful:", secondAttempt.fullProductName)
-      return secondAttempt.fullProductName
+    if (
+      secondAttempt.confidence === "high" ||
+      secondAttempt.confidence === "medium"
+    ) {
+      console.log(
+        "[v0] Second attempt successful:",
+        secondAttempt.fullProductName
+      );
+      return secondAttempt.fullProductName;
     }
 
-    if (secondAttempt.clarificationQuestions && secondAttempt.clarificationQuestions.length > 0 && !userContext) {
-      console.log("[v0] Second attempt needs clarification")
+    if (
+      secondAttempt.clarificationQuestions &&
+      secondAttempt.clarificationQuestions.length > 0 &&
+      !userContext
+    ) {
+      console.log("[v0] Second attempt needs clarification");
       return {
         needsClarification: true,
         questions: secondAttempt.clarificationQuestions,
-      }
+      };
     }
 
-    console.log("[v0] Attempting broad category identification...")
-    const fallbackAttempt = await attemptIdentification(imageUrl, "fallback", userContext)
+    console.log("[v0] Attempting broad category identification...");
+    const fallbackAttempt = await attemptIdentification(
+      imageUrl,
+      "fallback",
+      userContext
+    );
 
     if (fallbackAttempt.needsManualReview) {
-      throw new Error("Image unclear - please enter product name manually")
+      throw new Error("Image unclear - please enter product name manually");
     }
 
-    console.log("[v0] Identified product:", fallbackAttempt.fullProductName)
-    return fallbackAttempt.fullProductName
+    console.log("[v0] Identified product:", fallbackAttempt.fullProductName);
+    return fallbackAttempt.fullProductName;
   } catch (error) {
-    console.error("[v0] Error identifying product from photo:", error)
-    throw new Error("Failed to identify product from photo")
+    console.error("[v0] Error identifying product from photo:", error);
+    throw new Error("Failed to identify product from photo");
   }
 }
 
 async function attemptIdentification(
   imageUrl: string,
   strategy: "detailed" | "visual" | "fallback",
-  userContext?: string,
+  userContext?: string
 ): Promise<IdentificationResult> {
-  let promptText = ""
+  let promptText = "";
 
   const contextNote = userContext
     ? `\n\nUSER PROVIDED CONTEXT: ${userContext}\nUse this information to improve identification.`
-    : ""
+    : "";
 
   if (strategy === "detailed") {
     promptText = `Analyze this image and identify the product with as much detail as possible.
@@ -160,7 +159,7 @@ Return a JSON object with:
   "clarificationQuestions": ["question 1?", "question 2?"]
 }
 
-Return ONLY valid JSON, no other text.${contextNote}`
+Return ONLY valid JSON, no other text.${contextNote}`;
   } else if (strategy === "visual") {
     promptText = `Look at this image and describe what you see, focusing on the item type and characteristics.
 
@@ -180,7 +179,7 @@ Return a JSON object:
   "clarificationQuestions": ["helpful questions"]
 }
 
-Return ONLY valid JSON.${contextNote}`
+Return ONLY valid JSON.${contextNote}`;
   } else {
     promptText = `Identify the basic category of the item in this image.
 
@@ -194,7 +193,7 @@ Return JSON:
   "clarificationQuestions": []
 }
 
-Return ONLY valid JSON.${contextNote}`
+Return ONLY valid JSON.${contextNote}`;
   }
 
   const { text } = await generateText({
@@ -215,33 +214,33 @@ Return ONLY valid JSON.${contextNote}`
       },
     ],
     maxTokens: 400,
-  })
+  });
 
   try {
     const cleanedText = text
       .trim()
       .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-    const result: IdentificationResult = JSON.parse(cleanedText)
+      .replace(/```\n?/g, "");
+    const result: IdentificationResult = JSON.parse(cleanedText);
 
-    console.log(`[v0] ${strategy} attempt result:`, result)
+    console.log(`[v0] ${strategy} attempt result:`, result);
 
     if (isGenericResponse(result.productName)) {
-      console.log("[v0] Generic response detected, lowering confidence")
-      result.confidence = "low"
-      result.needsManualReview = true
+      console.log("[v0] Generic response detected, lowering confidence");
+      result.confidence = "low";
+      result.needsManualReview = true;
     }
 
-    return result
+    return result;
   } catch (parseError) {
-    console.error("[v0] Failed to parse JSON response:", text)
+    console.error("[v0] Failed to parse JSON response:", text);
     return {
       productName: text.trim().slice(0, 50),
       fullProductName: text.trim().slice(0, 100),
       confidence: "low",
       reasoning: "Unable to parse structured response",
       needsManualReview: true,
-    }
+    };
   }
 }
 
@@ -256,8 +255,8 @@ function isGenericResponse(productName: string): boolean {
     "unable to determine",
     "unclear",
     "cannot see",
-  ]
+  ];
 
-  const lowerName = productName.toLowerCase()
-  return genericPhrases.some((phrase) => lowerName.includes(phrase))
+  const lowerName = productName.toLowerCase();
+  return genericPhrases.some((phrase) => lowerName.includes(phrase));
 }

@@ -2,6 +2,7 @@
 
 import { generateText } from "ai"
 import { z } from "zod"
+import { simplifyProductName } from "./simplify-product-name"
 
 const productInfoSchema = z.object({
   name: z.string().describe("Simple generic item name for moving manifest"),
@@ -34,40 +35,6 @@ function isURL(text: string): boolean {
   } catch {
     return false
   }
-}
-
-function simplifyProductName(fullName: string): string {
-  const brandPatterns = [
-    /^IKEA\s+/i,
-    /^KALLAX\s+/i,
-    /^HEMNES\s+/i,
-    /^REGISSÖR\s+/i,
-    /^LAGKAPTEN\s+/i,
-    /^HOMCOM\s+/i,
-    /^Yaheetech\s+/i,
-    /^Michigan\s+/i,
-    /\s+by\s+[A-Z][a-z]+/gi,
-    /^[A-Z][a-z]+\s+Velvet\s+/i,
-  ]
-
-  let simplified = fullName
-  brandPatterns.forEach((pattern) => {
-    simplified = simplified.replace(pattern, "")
-  })
-
-  simplified = simplified.replace(/^\d+[\d./"'\s-]*\s+/, "")
-  simplified = simplified.replace(/\s*$$[^)]+$$\s*/g, " ")
-  simplified = simplified.replace(/\s*-\s*[A-Z][a-z]+\s*$/, "")
-  simplified = simplified
-    .replace(/\s+(Golden Bronze|Dark Blue|Cream White)\s*/gi, " ")
-    .replace(/\s+with\s+.*/i, "")
-    .replace(/,\s+white$/i, "")
-    .replace(/,\s+\d+x\d+.*$/i, "")
-
-  simplified = simplified.replace(/\s+/g, " ").trim()
-  simplified = simplified.charAt(0).toUpperCase() + simplified.slice(1)
-
-  return simplified
 }
 
 export async function researchProduct(input: string): Promise<ProductInfo> {
@@ -181,8 +148,11 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks, just J
 
     const parsedData = JSON.parse(jsonMatch[0])
 
+    // Use AI to simplify product name if not provided
+    const simplifiedName = parsedData.name || (await simplifyProductName(parsedData.fullProductName || input))
+
     const result = productInfoSchema.parse({
-      name: parsedData.name || simplifyProductName(parsedData.fullProductName || input),
+      name: simplifiedName,
       fullProductName: parsedData.fullProductName || input,
       dimensions: {
         length: typeof parsedData.dimensions?.length === "number" ? parsedData.dimensions.length : null,
