@@ -1,10 +1,13 @@
 /**
  * Photo identification prompts for analyzing product images.
  *
- * Provides three strategies with different approaches:
+ * V1 (Legacy): Three-strategy fallback approach
  * - detailed: Attempts to find brand names, model numbers, specific features
  * - visual: Focuses on visual characteristics when text is unclear
  * - fallback: Basic category identification as last resort
+ *
+ * V2 (Recommended): Strategic single-pass approach
+ * - strategic: Single call with smart questioning based on item analysis
  */
 
 // Types and schemas
@@ -25,6 +28,12 @@ export {
   buildPrompt as buildFallbackPrompt,
   PROMPT_META as FALLBACK_META,
 } from "./fallback";
+
+// V2 Strategic prompt (recommended)
+export {
+  buildPrompt as buildStrategicPrompt,
+  PROMPT_META as STRATEGIC_META,
+} from "./strategic";
 
 // Re-import for registry
 import {

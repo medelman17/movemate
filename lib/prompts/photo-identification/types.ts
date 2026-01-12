@@ -35,3 +35,136 @@ export interface IdentificationContext {
   /** Whether user has already uploaded additional photos */
   hasAdditionalPhotos?: boolean;
 }
+
+// ============================================================================
+// NEW STRATEGIC IDENTIFICATION SCHEMAS (v2)
+// ============================================================================
+
+/**
+ * Strategic approach for identifying the product.
+ * Each strategy determines what questions to ask and how to proceed.
+ */
+export type IdentificationStrategyType =
+  | "check_label" // Guide user to find physical label/tag
+  | "purchase_history" // Ask where/when they bought it
+  | "store_search" // Search retailer catalog with features
+  | "feature_match" // Search by distinctive visual features
+  | "use_estimates"; // Skip identification, use visual estimates
+
+/**
+ * Input type for clarification questions.
+ */
+export type QuestionInputType = "text" | "select" | "photo" | "date" | "number";
+
+/**
+ * A single clarification question with metadata.
+ */
+export const clarificationQuestionSchema = z.object({
+  question: z.string().describe("The question to ask the user"),
+  rationale: z
+    .string()
+    .describe("Why this question helps with identification (for debugging/logging)"),
+  inputType: z
+    .enum(["text", "select", "photo", "date", "number"])
+    .describe("Type of input expected from user"),
+  options: z
+    .array(z.string())
+    .optional()
+    .describe("For 'select' type: available options"),
+  placeholder: z.string().optional().describe("Placeholder text for text inputs"),
+});
+
+export type ClarificationQuestion = z.infer<typeof clarificationQuestionSchema>;
+
+/**
+ * Identification strategy with questions to ask.
+ */
+export const identificationStrategySchema = z.object({
+  approach: z
+    .enum(["check_label", "purchase_history", "store_search", "feature_match", "use_estimates"])
+    .describe("Strategic approach to identification"),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in the chosen strategy (0-1)"),
+  reasoning: z.string().describe("Why this strategy was chosen"),
+  questions: z
+    .array(clarificationQuestionSchema)
+    .max(3)
+    .describe("Up to 3 strategic questions to ask"),
+});
+
+export type IdentificationStrategy2 = z.infer<typeof identificationStrategySchema>;
+
+/**
+ * Visual estimates as fallback when identification is uncertain.
+ */
+export const visualEstimatesSchema = z.object({
+  dimensions: z.object({
+    length: z.number().nullable().describe("Estimated length in inches"),
+    width: z.number().nullable().describe("Estimated width in inches"),
+    height: z.number().nullable().describe("Estimated height in inches"),
+  }),
+  weight: z.number().nullable().describe("Estimated weight in pounds"),
+  canDisassemble: z.boolean().nullable().describe("Whether item can be disassembled"),
+  notes: z.string().optional().describe("Additional visual observations"),
+});
+
+export type VisualEstimates = z.infer<typeof visualEstimatesSchema>;
+
+/**
+ * Complete structured output from strategic photo identification (v2).
+ * This replaces the old multi-attempt approach with a single comprehensive call.
+ */
+export const strategicIdentificationSchema = z.object({
+  // Basic identification from photo
+  itemType: z.string().describe("Generic item type (e.g., 'Sofa', 'Bookshelf', 'Coffee Table')"),
+  category: z
+    .enum([
+      "Furniture",
+      "Electronics",
+      "Kitchenware",
+      "Clothing",
+      "Books",
+      "Decor",
+      "Tools",
+      "Appliances",
+      "Other",
+    ])
+    .describe("Item category for moving inventory"),
+
+  // Visual characteristics
+  distinctiveFeatures: z
+    .array(z.string())
+    .describe("Distinctive visual features (color, material, style, unique elements)"),
+  styleFamily: z.string().optional().describe("Design style (e.g., 'Mid-Century Modern', 'Industrial')"),
+
+  // Visual estimates (always provided as fallback)
+  visualEstimates: visualEstimatesSchema,
+
+  // Strategic approach
+  strategy: identificationStrategySchema,
+
+  // Immediate identification (if possible from photo alone)
+  immediateIdentification: z
+    .object({
+      productName: z.string().describe("Simple generic type"),
+      fullProductName: z.string().describe("Detailed name with brand/model if visible"),
+      confidence: z.enum(["high", "medium", "low"]),
+    })
+    .optional()
+    .describe("Immediate identification if brand/model visible in photo"),
+});
+
+export type StrategicIdentification = z.infer<typeof strategicIdentificationSchema>;
+
+/**
+ * Context for building strategic identification prompts.
+ */
+export interface StrategicIdentificationContext {
+  /** User-provided description or hints */
+  userContext?: string;
+  /** Answers to previous clarification questions */
+  previousAnswers?: Record<string, string>;
+}
