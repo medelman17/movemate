@@ -30,7 +30,7 @@ const LOCATIONS = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "Garage", "S
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const MIN_IMAGE_DIMENSION = 100 // 100px minimum
 const MAX_IMAGE_DIMENSION = 4096 // 4096px maximum
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
 const OPTIMAL_AI_DIMENSION = 1024 // Optimal size for AI analysis
 const COMPRESSION_QUALITY = 0.85 // JPEG compression quality
 
@@ -171,12 +171,66 @@ async function preprocessImage(file: File): Promise<string> {
 }
 
 async function validateImage(file: File): Promise<{ valid: boolean; error?: string }> {
+  console.log("[v0] Validating image:", {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    lastModified: new Date(file.lastModified).toISOString(),
+  })
+
   if (file.size > MAX_IMAGE_SIZE) {
     return { valid: false, error: "Image must be smaller than 5MB" }
   }
 
   if (file.size === 0) {
     return { valid: false, error: "Image file is empty" }
+  }
+
+  if (
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    file.name.toLowerCase().endsWith(".heic") ||
+    file.name.toLowerCase().endsWith(".heif")
+  ) {
+    console.log("[v0] HEIC/HEIF file detected - browser will handle conversion")
+    return new Promise((resolve) => {
+      const img = new Image()
+      const objectUrl = URL.createObjectURL(file)
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl)
+
+        if (img.width < MIN_IMAGE_DIMENSION || img.height < MIN_IMAGE_DIMENSION) {
+          resolve({
+            valid: false,
+            error: `Image is too small. Minimum size is ${MIN_IMAGE_DIMENSION}x${MIN_IMAGE_DIMENSION}px`,
+          })
+          return
+        }
+
+        if (img.width > MAX_IMAGE_DIMENSION || img.height > MAX_IMAGE_DIMENSION) {
+          resolve({
+            valid: false,
+            error: `Image is too large. Maximum size is ${MAX_IMAGE_DIMENSION}x${MAX_IMAGE_DIMENSION}px`,
+          })
+          return
+        }
+
+        console.log("[v0] HEIC/HEIF validation passed:", `${img.width}x${img.height}`)
+        resolve({ valid: true })
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl)
+        console.error("[v0] HEIC/HEIF loading failed")
+        resolve({
+          valid: false,
+          error: "Could not load HEIC/HEIF image. Try converting to JPEG first or use a different photo.",
+        })
+      }
+
+      img.src = objectUrl
+    })
   }
 
   const buffer = await file.slice(0, 12).arrayBuffer()
@@ -204,11 +258,20 @@ async function validateImage(file: File): Promise<{ valid: boolean; error?: stri
   }
 
   if (!detectedType || !ALLOWED_IMAGE_TYPES.includes(detectedType)) {
+    console.error("[v0] Invalid image type detected:", {
+      detectedType,
+      declaredType: file.type,
+      firstBytes: Array.from(bytes.slice(0, 12))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" "),
+    })
     return {
       valid: false,
-      error: "Invalid image format. Please use JPEG, PNG, GIF, or WebP",
+      error: "Invalid image format. Please use JPEG, PNG, GIF, WebP, or HEIC (iPhone photos)",
     }
   }
+
+  console.log("[v0] Image type validated:", detectedType)
 
   return new Promise((resolve) => {
     const img = new Image()
@@ -233,11 +296,13 @@ async function validateImage(file: File): Promise<{ valid: boolean; error?: stri
         return
       }
 
+      console.log("[v0] Image dimensions validated:", `${img.width}x${img.height}`)
       resolve({ valid: true })
     }
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl)
+      console.error("[v0] Image loading failed")
       resolve({ valid: false, error: "Could not load image. File may be corrupted" })
     }
 
@@ -461,7 +526,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                   <Input
                     id="photo-upload"
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     onChange={handlePhotoUpload}
                     disabled={isAnalyzingPhoto}
                     className="hidden"
@@ -488,7 +553,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Upload a photo and we'll identify the item and help you find specifications
+                Upload a photo (including iPhone HEIC) and we'll identify the item and help you find specifications
               </p>
             </div>
 
