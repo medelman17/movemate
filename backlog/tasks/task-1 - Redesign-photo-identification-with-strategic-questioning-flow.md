@@ -1,10 +1,10 @@
 ---
 id: task-1
 title: Redesign photo identification with strategic questioning flow
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 17:58'
-updated_date: '2026-01-12 17:58'
+updated_date: '2026-01-12 21:34'
 labels:
   - ai
   - performance
