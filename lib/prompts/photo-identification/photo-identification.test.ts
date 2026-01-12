@@ -150,7 +150,7 @@ describe("Photo Identification Prompts", () => {
 
       it("should have at least one changelog entry", () => {
         expect(DETAILED_META.changelog.length).toBeGreaterThan(0);
-        const firstEntry = DETAILED_META.changelog[0];
+        const firstEntry = DETAILED_META.changelog[0]!;
         expect(firstEntry.version).toBeDefined();
         expect(firstEntry.date).toBeDefined();
         expect(firstEntry.change).toBeDefined();

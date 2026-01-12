@@ -138,11 +138,11 @@ describe("Product Research Prompts", () => {
 
     it("should return working builder functions", () => {
       const urlBuilder = getResearchPromptBuilder("url");
-      const urlPrompt = urlBuilder({ url: "https://example.com" });
+      const urlPrompt = urlBuilder({ url: "https://example.com" } as UrlResearchContext & SearchResearchContext);
       expect(typeof urlPrompt).toBe("string");
 
       const searchBuilder = getResearchPromptBuilder("search");
-      const searchPrompt = searchBuilder({ productName: "Test Product" });
+      const searchPrompt = searchBuilder({ productName: "Test Product" } as UrlResearchContext & SearchResearchContext);
       expect(typeof searchPrompt).toBe("string");
     });
   });
@@ -160,7 +160,7 @@ describe("Product Research Prompts", () => {
 
       it("should have at least one changelog entry", () => {
         expect(URL_META.changelog.length).toBeGreaterThan(0);
-        const firstEntry = URL_META.changelog[0];
+        const firstEntry = URL_META.changelog[0]!;
         expect(firstEntry.version).toBeDefined();
         expect(firstEntry.date).toBeDefined();
         expect(firstEntry.change).toBeDefined();

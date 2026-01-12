@@ -37,9 +37,9 @@ export async function researchProduct(
     const prompt = buildResearchPrompt(input, isProductURL, photoContext)
 
     const { text } = await generateText({
-      model: "perplexity/sonar-pro",
+      model: "perplexity/sonar-pro" as any, // Provider-specific model string
       prompt,
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
     })
 
     console.log("[v0] Perplexity Response:", text)

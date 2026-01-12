@@ -161,7 +161,7 @@ async function attemptIdentification(
   const promptText = build({ userContext });
 
   const { text } = await generateText({
-    model: config.model,
+    model: config.model as any, // Provider-specific model string
     messages: [
       {
         role: "user",
@@ -177,7 +177,7 @@ async function attemptIdentification(
         ],
       },
     ],
-    maxTokens: config.maxTokens,
+    maxOutputTokens: config.maxTokens,
   });
 
   try {

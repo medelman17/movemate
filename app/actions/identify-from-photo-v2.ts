@@ -114,7 +114,7 @@ export async function identifyProductFromPhotoV2(
           ],
         },
       ],
-      maxTokens: 800 as any, // AI SDK type issue, works at runtime
+      maxOutputTokens: 800,
       temperature: 0.3,
     });
 

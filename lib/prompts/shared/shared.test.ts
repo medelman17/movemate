@@ -185,21 +185,13 @@ describe("Shared Prompt Fragments", () => {
     });
 
     describe("categoryExamples", () => {
-      it("should be a string or object", () => {
-        expect(["string", "object"].includes(typeof categoryExamples)).toBe(true);
+      it("should be an object", () => {
+        expect(typeof categoryExamples).toBe("object");
       });
 
-      if (typeof categoryExamples === "string") {
-        it("should be a non-empty string", () => {
-          expect(categoryExamples.length).toBeGreaterThan(0);
-        });
-      }
-
-      if (typeof categoryExamples === "object") {
-        it("should have category examples", () => {
-          expect(Object.keys(categoryExamples).length).toBeGreaterThan(0);
-        });
-      }
+      it("should have category examples", () => {
+        expect(Object.keys(categoryExamples).length).toBeGreaterThan(0);
+      });
     });
 
     describe("ItemCategory type", () => {
