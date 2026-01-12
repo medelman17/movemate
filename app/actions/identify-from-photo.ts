@@ -4,10 +4,54 @@ import { generateText } from "ai"
 
 interface IdentificationResult {
   productName: string
+  fullProductName: string // Added to preserve detailed product name
   confidence: "high" | "medium" | "low"
   reasoning: string
   needsManualReview: boolean
   clarificationQuestions?: string[]
+}
+
+function simplifyProductName(fullName: string): string {
+  // Remove brand names (common furniture brands)
+  const brandPatterns = [
+    /^IKEA\s+/i,
+    /^KALLAX\s+/i,
+    /^HEMNES\s+/i,
+    /^REGISSÖR\s+/i,
+    /^LAGKAPTEN\s+/i,
+    /^HOMCOM\s+/i,
+    /^Yaheetech\s+/i,
+    /^Michigan\s+/i,
+    /\s+by\s+[A-Z][a-z]+/gi,
+    /^[A-Z][a-z]+\s+Velvet\s+/i,
+  ]
+
+  let simplified = fullName
+  brandPatterns.forEach((pattern) => {
+    simplified = simplified.replace(pattern, "")
+  })
+
+  // Remove measurements from the beginning
+  simplified = simplified.replace(/^\d+[\d./"'\s-]*\s+/, "")
+
+  // Remove specific colors/materials/styles in parentheses or at the end
+  simplified = simplified.replace(/\s*$$[^)]+$$\s*/g, " ")
+  simplified = simplified.replace(/\s*-\s*[A-Z][a-z]+\s*$/, "")
+
+  // Remove extra descriptive words
+  simplified = simplified
+    .replace(/\s+(Golden Bronze|Dark Blue|Cream White)\s*/gi, " ")
+    .replace(/\s+with\s+.*/i, "")
+    .replace(/,\s+white$/i, "")
+    .replace(/,\s+\d+x\d+.*$/i, "")
+
+  // Clean up spacing
+  simplified = simplified.replace(/\s+/g, " ").trim()
+
+  // Capitalize first letter
+  simplified = simplified.charAt(0).toUpperCase() + simplified.slice(1)
+
+  return simplified
 }
 
 export async function identifyProductFromPhoto(
@@ -20,8 +64,8 @@ export async function identifyProductFromPhoto(
     const firstAttempt = await attemptIdentification(imageUrl, "detailed", userContext)
 
     if (firstAttempt.confidence === "high") {
-      console.log("[v0] High confidence identification:", firstAttempt.productName)
-      return firstAttempt.productName
+      console.log("[v0] High confidence identification:", firstAttempt.fullProductName)
+      return firstAttempt.fullProductName
     }
 
     if (firstAttempt.clarificationQuestions && firstAttempt.clarificationQuestions.length > 0 && !userContext) {
@@ -36,8 +80,8 @@ export async function identifyProductFromPhoto(
     const secondAttempt = await attemptIdentification(imageUrl, "visual", userContext)
 
     if (secondAttempt.confidence === "high" || secondAttempt.confidence === "medium") {
-      console.log("[v0] Second attempt successful:", secondAttempt.productName)
-      return secondAttempt.productName
+      console.log("[v0] Second attempt successful:", secondAttempt.fullProductName)
+      return secondAttempt.fullProductName
     }
 
     if (secondAttempt.clarificationQuestions && secondAttempt.clarificationQuestions.length > 0 && !userContext) {
@@ -55,8 +99,8 @@ export async function identifyProductFromPhoto(
       throw new Error("Image unclear - please enter product name manually")
     }
 
-    console.log("[v0] Identified product:", fallbackAttempt.productName)
-    return fallbackAttempt.productName
+    console.log("[v0] Identified product:", fallbackAttempt.fullProductName)
+    return fallbackAttempt.fullProductName
   } catch (error) {
     console.error("[v0] Error identifying product from photo:", error)
     throw new Error("Failed to identify product from photo")
@@ -85,29 +129,19 @@ CRITICAL INSTRUCTIONS:
 5. Rate your confidence: HIGH (brand/model visible), MEDIUM (distinctive features), LOW (generic)
 6. If confidence is LOW or MEDIUM, provide 2-3 clarification questions to ask the user
 
+RETURN TWO NAMES:
+- "productName": Simple generic type (e.g., "Coffee Table", "Shelf Unit", "Ottoman")
+- "fullProductName": Detailed name with brand/model/specifics (e.g., "IKEA KALLAX Shelf unit, white", "Michigan Velvet Ottoman Dark Blue")
+
 Return a JSON object with:
 {
-  "productName": "specific product name",
+  "productName": "Simple generic type",
+  "fullProductName": "Brand Model Color/Size if visible",
   "confidence": "high|medium|low",
-  "reasoning": "why you identified it this way",
+  "reasoning": "detailed explanation of what you see",
   "needsManualReview": false,
   "clarificationQuestions": ["question 1?", "question 2?"]
 }
-
-Clarification question examples:
-- "Can you see a brand name or logo on this item?"
-- "Is this from IKEA, Wayfair, or another furniture retailer?"
-- "What room is this item in or intended for?"
-- "Do you remember where you purchased this item?"
-
-Examples of GOOD high-confidence responses:
-- "IKEA Kallax Shelf Unit in white"
-- "Samsung 55-inch Frame TV"
-- "Herman Miller Aeron Office Chair"
-
-Examples of MEDIUM confidence:
-- "Modern gray fabric sectional sofa"
-- "Wooden mid-century coffee table with tapered legs"
 
 Return ONLY valid JSON, no other text.${contextNote}`
   } else if (strategy === "visual") {
@@ -116,56 +150,32 @@ Return ONLY valid JSON, no other text.${contextNote}`
 INSTRUCTIONS:
 1. Ignore any text/labels you can't read clearly
 2. Focus on shape, size, material, color, style
-3. Describe the item type and distinctive features
-4. Handle edge cases:
-   - Blurry image: describe general category
-   - Multiple objects: describe the largest/central one
-   - Partial visibility: describe what you can see
-5. If uncertain, provide clarification questions
+3. Provide both simple and detailed names
+4. Handle edge cases (blurry, multiple objects, partial visibility)
 
 Return a JSON object:
 {
-  "productName": "descriptive product name",
+  "productName": "Simple type (e.g., Bookshelf, Armchair)",
+  "fullProductName": "Detailed description (e.g., Wooden Bookshelf with Glass Doors, Blue Velvet Armchair)",
   "confidence": "medium|low",
   "reasoning": "visual characteristics observed",
   "needsManualReview": false,
   "clarificationQuestions": ["helpful questions"]
 }
 
-Example clarification questions:
-- "Is this a bookshelf or entertainment center?"
-- "What material is this made of - wood, metal, or plastic?"
-- "Approximately how tall is this item in feet?"
-
-Example responses:
-- "Large wooden bookshelf with 5 shelves"
-- "Beige upholstered armchair"
-- "Stainless steel dining table"
-
 Return ONLY valid JSON.${contextNote}`
   } else {
-    // fallback strategy
     promptText = `Identify the basic category of the item in this image.
-
-INSTRUCTIONS:
-1. What TYPE of item is this? (furniture, appliance, decor, etc.)
-2. If image is too blurry or unclear, set needsManualReview: true
-3. If multiple items and unclear which is main, set needsManualReview: true
-4. Otherwise provide a generic but useful description
 
 Return JSON:
 {
-  "productName": "generic category description",
+  "productName": "generic category",
+  "fullProductName": "generic category with visible details",
   "confidence": "low",
   "reasoning": "explanation",
   "needsManualReview": true/false,
   "clarificationQuestions": []
 }
-
-Examples:
-- "Furniture item - appears to be storage unit"
-- "Kitchen appliance"
-- Image unclear: needsManualReview: true
 
 Return ONLY valid JSON.${contextNote}`
   }
@@ -209,7 +219,8 @@ Return ONLY valid JSON.${contextNote}`
   } catch (parseError) {
     console.error("[v0] Failed to parse JSON response:", text)
     return {
-      productName: text.trim().slice(0, 100),
+      productName: text.trim().slice(0, 50),
+      fullProductName: text.trim().slice(0, 100),
       confidence: "low",
       reasoning: "Unable to parse structured response",
       needsManualReview: true,
