@@ -5,11 +5,16 @@ import type { PromptConfig } from "../types";
  */
 export const PROMPT_META: PromptConfig = {
   id: "simplify-product-name",
-  version: "1.0.0",
-  model: "openai/gpt-4o-mini",
+  version: "1.1.0",
+  model: "openai/gpt-5-mini",
   maxTokens: 50,
   description: "Simplifies detailed product names to generic item types for moving inventory",
   changelog: [
+    {
+      version: "1.1.0",
+      date: "2026-01-13",
+      change: "Upgrade to GPT-5-mini for improved performance at similar cost",
+    },
     {
       version: "1.0.0",
       date: "2026-01-12",
