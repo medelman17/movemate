@@ -1,9 +1,10 @@
 ---
 id: task-8.1
 title: Install and configure Sentry for Next.js
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 16:53'
+updated_date: '2026-01-13 17:14'
 labels:
   - observability
 dependencies: []

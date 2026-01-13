@@ -1,9 +1,10 @@
 ---
 id: task-8.4
 title: Replace console.log calls with Pino logger
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 16:53'
+updated_date: '2026-01-13 17:07'
 labels:
   - observability
 dependencies:
@@ -37,3 +38,9 @@ logger.info({ duration, strategy }, 'Photo analysis complete');
 - Put structured data first, message second
 - Include trace IDs where available
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed as part of task-8.3.5, task-8.3.6, and task-8.3.7
+<!-- SECTION:NOTES:END -->
