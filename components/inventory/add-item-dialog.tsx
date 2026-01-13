@@ -480,6 +480,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     setFormData((prev) => ({
       ...prev,
       name: result.estimates.itemType,
+      description: result.estimates.description || prev.description,
       category: result.estimates.category || prev.category,
       weight: result.estimates.weight ?? prev.weight,
       length: result.estimates.dimensions.length ?? prev.length,
