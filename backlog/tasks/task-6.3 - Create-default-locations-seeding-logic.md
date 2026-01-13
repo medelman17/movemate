@@ -1,9 +1,10 @@
 ---
 id: task-6.3
 title: Create default locations seeding logic
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:06'
+updated_date: '2026-01-13 15:19'
 labels:
   - server-actions
 dependencies:
@@ -57,8 +58,20 @@ export async function seedDefaultLocationsIfNeeded(): Promise<Location[]> {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Default locations defined with icons
-- [ ] #2 seedDefaultLocationsIfNeeded only seeds when user has none
-- [ ] #3 Seeding is idempotent (safe to call multiple times)
-- [ ] #4 Defaults include common room types
+- [x] #1 Default locations defined with icons
+- [x] #2 seedDefaultLocationsIfNeeded only seeds when user has none
+- [x] #3 Seeding is idempotent (safe to call multiple times)
+- [x] #4 Defaults include common room types
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Completed
+
+Added to `app/actions/locations.ts`:
+- `DEFAULT_LOCATIONS` constant with 9 common room types
+- `seedDefaultLocationsIfNeeded()` - idempotent seeding function
+
+Default locations: Living Room, Bedroom, Kitchen, Bathroom, Dining Room, Office, Garage, Storage, Outdoor
+<!-- SECTION:NOTES:END -->

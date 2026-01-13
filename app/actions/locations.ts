@@ -269,3 +269,64 @@ export async function getLocationItemCounts(): Promise<Record<string, number>> {
 
   return counts;
 }
+
+/**
+ * Default locations to seed for new users.
+ */
+const DEFAULT_LOCATIONS = [
+  { name: "Living Room", icon: "🛋️" },
+  { name: "Bedroom", icon: "🛏️" },
+  { name: "Kitchen", icon: "🍳" },
+  { name: "Bathroom", icon: "🚿" },
+  { name: "Dining Room", icon: "🍽️" },
+  { name: "Office", icon: "💼" },
+  { name: "Garage", icon: "🚗" },
+  { name: "Storage", icon: "📦" },
+  { name: "Outdoor", icon: "🌳" },
+] as const;
+
+/**
+ * Seed default locations if user has none.
+ * This is idempotent - safe to call multiple times.
+ *
+ * @returns The user's locations (either existing or newly created defaults)
+ */
+export async function seedDefaultLocationsIfNeeded(): Promise<Location[]> {
+  const supabase = await createClient();
+
+  // Check if user already has locations
+  const existing = await getLocations();
+  if (existing.length > 0) {
+    return existing;
+  }
+
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Batch insert all default locations
+  const locationsToInsert = DEFAULT_LOCATIONS.map((loc, index) => ({
+    user_id: user.id,
+    name: loc.name,
+    icon: loc.icon,
+    color: null,
+    sort_order: index,
+  }));
+
+  const { data, error } = await supabase
+    .from("locations")
+    .insert(locationsToInsert)
+    .select();
+
+  if (error) {
+    console.error("[locations] Error seeding default locations:", error);
+    throw new Error("Failed to create default locations");
+  }
+
+  console.log(`[locations] Seeded ${data.length} default locations for user ${user.id}`);
+  return data;
+}
