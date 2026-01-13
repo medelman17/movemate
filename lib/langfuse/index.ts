@@ -26,3 +26,8 @@ export {
   generateSessionId,
   type TraceContext,
 } from "./trace-context";
+
+export {
+  logIdentificationOutcome,
+  type IdentificationCorrections,
+} from "./scoring";

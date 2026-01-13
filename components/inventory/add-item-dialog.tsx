@@ -26,6 +26,7 @@ import {
   type StrategicIdentificationResult,
 } from "@/app/actions/identify-from-photo-v2"
 import type { ClarificationQuestion } from "@/lib/prompts/photo-identification"
+import { logIdentificationOutcome } from "@/lib/langfuse/scoring"
 import { useToast } from "@/hooks/use-toast"
 
 const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
@@ -394,6 +395,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   const [structuredAnswers, setStructuredAnswers] = useState<Record<string, string>>({})
   // V2: Track clarification round (max 2)
   const [clarificationRound, setClarificationRound] = useState(0)
+  // Langfuse: Track AI suggestion for scoring
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    name: string;
+    traceId?: string;
+  } | null>(null)
   const { toast } = useToast()
   const [formData, setFormData] = useState<Partial<ItemFormData>>({
     name: "",
@@ -511,10 +517,16 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
           confidence: result.identified?.confidence,
           questionsCount: result.questions?.length ?? 0,
           strategy: result.strategy.approach,
+          traceId: result.traceId,
         })
 
         // Case 1: High confidence identification - proceed to research
         if (result.identified && result.identified.confidence === "high") {
+          // Track AI suggestion for scoring
+          setAiSuggestion({
+            name: result.identified.fullProductName,
+            traceId: result.traceId,
+          })
           await proceedWithResearch(result.identified.fullProductName)
           return
         }
@@ -536,12 +548,22 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
         // Case 3: Medium confidence identification - proceed with research
         if (result.identified) {
+          // Track AI suggestion for scoring
+          setAiSuggestion({
+            name: result.identified.fullProductName,
+            traceId: result.traceId,
+          })
           await proceedWithResearch(result.identified.fullProductName)
           return
         }
 
         // Case 4: No identification, no questions - use estimates
         console.log("[v2] Using visual estimates directly")
+        // Track estimate as AI suggestion for scoring
+        setAiSuggestion({
+          name: result.estimates.itemType,
+          traceId: result.traceId,
+        })
         applyEstimates(result)
         setProcessingStage("")
         setIsAnalyzingPhoto(false)
@@ -622,6 +644,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     if (!pendingResult) return
 
     console.log("[v2] User skipped clarification, using estimates")
+    // Track estimate as AI suggestion for scoring
+    setAiSuggestion({
+      name: pendingResult.estimates.itemType,
+      traceId: pendingResult.traceId,
+    })
     applyEstimates(pendingResult)
     setClarificationNeeded(false)
     setPendingResult(null)
@@ -681,6 +708,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
       // Case 1: Got identification - proceed to research
       if (result.identified && result.identified.confidence !== "low") {
+        // Track AI suggestion for scoring
+        setAiSuggestion({
+          name: result.identified.fullProductName,
+          traceId: result.traceId,
+        })
         await proceedWithResearch(result.identified.fullProductName)
         setStructuredAnswers({})
         setClarificationPhotos([])
@@ -703,6 +735,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
       // Case 3: Max rounds reached or no more questions - use estimates
       console.log("[v2] Max rounds reached or no questions, using estimates")
+      // Track estimate as AI suggestion for scoring
+      setAiSuggestion({
+        name: result.estimates.itemType,
+        traceId: result.traceId,
+      })
       applyEstimates(result)
       setProcessingStage("")
       setIsAnalyzingPhoto(false)
@@ -740,6 +777,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     setPendingResult(null)
     setStructuredAnswers({})
     setClarificationRound(0)
+    setAiSuggestion(null)
   }
 
   const handleAIResearch = async () => {
@@ -841,8 +879,25 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
       if (error) throw error
 
+      // Log identification outcome to Langfuse (fire-and-forget)
+      if (aiSuggestion?.traceId) {
+        const nameAccepted = formData.name === aiSuggestion.name
+        logIdentificationOutcome(
+          aiSuggestion.traceId,
+          nameAccepted,
+          nameAccepted ? undefined : {
+            originalName: aiSuggestion.name,
+            finalName: formData.name || "",
+          }
+        ).catch((err) => {
+          // Don't let scoring errors affect user flow
+          console.error("[Langfuse] Scoring failed:", err)
+        })
+      }
+
       setOpen(false)
       setUploadedPhoto(null)
+      setAiSuggestion(null)
       setFormData({
         name: "",
         description: "",

@@ -8,6 +8,7 @@ import {
   type ClarificationQuestion,
 } from "@/lib/prompts/photo-identification";
 import { buildPhotoIdentificationTelemetry } from "@/lib/langfuse/telemetry";
+import { getActiveTraceId } from "@langfuse/tracing";
 
 // Create Vercel AI Gateway instance
 const gateway = createGateway({
@@ -52,6 +53,8 @@ export interface StrategicIdentificationResult {
     confidence: number;
     reasoning: string;
   };
+  /** Langfuse trace ID for scoring (undefined if tracing disabled) */
+  traceId?: string;
 }
 
 /**
@@ -136,6 +139,9 @@ export async function identifyProductFromPhotoV2(
     const duration = Date.now() - startTime;
     const result = object as StrategicIdentification;
 
+    // Capture trace ID for later scoring (may be undefined if tracing disabled)
+    const traceId = getActiveTraceId();
+
     // Validate result structure
     if (!result.itemType || !result.category || !result.strategy) {
       console.error("[v2] Invalid response structure:", result);
@@ -176,6 +182,7 @@ export async function identifyProductFromPhotoV2(
         confidence: result.strategy.confidence,
         reasoning: result.strategy.reasoning,
       },
+      traceId,
     };
 
     return output;
