@@ -1,9 +1,10 @@
 ---
 id: task-6.5
 title: Build LocationSelector component
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:06'
+updated_date: '2026-01-13 15:21'
 labels:
   - ui
   - component
@@ -77,11 +78,30 @@ User types "Basement"
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Combobox shows all user locations
-- [ ] #2 Search filters locations by name
-- [ ] #3 Inline create option appears for new names
-- [ ] #4 Creating location selects it automatically
-- [ ] #5 Keyboard navigation works
-- [ ] #6 Loading and error states handled
-- [ ] #7 Matches existing UI patterns
+- [x] #1 Combobox shows all user locations
+- [x] #2 Search filters locations by name
+- [x] #3 Inline create option appears for new names
+- [x] #4 Creating location selects it automatically
+- [x] #5 Keyboard navigation works
+- [x] #6 Loading and error states handled
+- [x] #7 Matches existing UI patterns
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Completed
+
+Created `components/inventory/location-selector.tsx`:
+- Combobox using Command + Popover from shadcn/ui
+- Search/filter locations by name
+- Inline "Create X" option when typing new name
+- Auto-seeds defaults on first load
+- Unassigned option support
+- Loading and creating states
+- Keyboard navigation via cmdk
+
+Also added:
+- `components/ui/popover.tsx`
+- `components/ui/command.tsx`
+<!-- SECTION:NOTES:END -->
