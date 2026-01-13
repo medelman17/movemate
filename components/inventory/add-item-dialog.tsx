@@ -749,10 +749,12 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       }
 
       // Call v2 API with structured answers
+      // Pass clarificationRound so AI knows when to stop asking questions
       const result = await identifyProductFromPhotoV2(
         uploadedPhoto,
         userContext,
-        structuredAnswers
+        structuredAnswers,
+        clarificationRound
       )
 
       const nextRound = clarificationRound + 1
@@ -779,7 +781,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       }
 
       // Case 2: More questions and under round limit - ask again
-      if (result.questions && result.questions.length > 0 && nextRound < 2) {
+      if (result.questions && result.questions.length > 0 && nextRound < 5) {
         setPendingResult(result)
         setClarificationNeeded(true)
         setStructuredAnswers({}) // Reset for new questions
@@ -807,7 +809,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       setPendingResult(null)
 
       toast({
-        title: nextRound >= 2 ? "Max rounds reached" : "Item analyzed",
+        title: nextRound >= 5 ? "Max rounds reached" : "Item analyzed",
         description: "Using visual estimates. You can refine the details below.",
       })
     } catch (error) {
@@ -1042,7 +1044,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                       </h4>
                       <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
                         Strategy: {pendingResult.strategy.approach.replace(/_/g, " ")}
-                        {clarificationRound > 1 && ` (Round ${clarificationRound}/2)`}
+                        {clarificationRound > 0 && ` (Round ${clarificationRound + 1}/5)`}
                       </p>
                     </div>
 

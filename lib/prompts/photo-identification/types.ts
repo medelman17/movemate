@@ -167,4 +167,6 @@ export interface StrategicIdentificationContext {
   userContext?: string;
   /** Answers to previous clarification questions */
   previousAnswers?: Record<string, string>;
+  /** Current clarification round (0-indexed). When >= 1, this is the final round. */
+  clarificationRound?: number;
 }
