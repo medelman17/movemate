@@ -1,9 +1,10 @@
 ---
 id: task-6.2.4
 title: Create deleteLocation action with item reassignment
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:16'
+updated_date: '2026-01-13 15:18'
 labels:
   - server-actions
 dependencies:

@@ -1,10 +1,10 @@
 ---
 id: task-6.2
 title: Create location server actions (CRUD)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-13 15:05'
-updated_date: '2026-01-13 15:16'
+updated_date: '2026-01-13 15:18'
 labels:
   - server-actions
   - api
@@ -73,11 +73,26 @@ export async function getLocationItemCounts(): Promise<Record<string, number>>
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 createLocation works with validation
-- [ ] #2 getLocations returns sorted list for current user
-- [ ] #3 updateLocation validates and updates
-- [ ] #4 deleteLocation handles item reassignment
-- [ ] #5 reorderLocations updates sort_order correctly
-- [ ] #6 getLocationItemCounts returns accurate counts
-- [ ] #7 All actions handle errors gracefully
+- [x] #1 createLocation works with validation
+- [x] #2 getLocations returns sorted list for current user
+- [x] #3 updateLocation validates and updates
+- [x] #4 deleteLocation handles item reassignment
+- [x] #5 reorderLocations updates sort_order correctly
+- [x] #6 getLocationItemCounts returns accurate counts
+- [x] #7 All actions handle errors gracefully
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Completed
+
+All server actions implemented in `app/actions/locations.ts`:
+- getLocations() - sorted by sort_order
+- getLocationById(id) - returns null if not found
+- createLocation(data) - with validation
+- updateLocation(id, data) - with validation
+- deleteLocation(id, reassignToId?) - handles item reassignment
+- reorderLocations(orderedIds) - bulk sort_order update
+- getLocationItemCounts() - returns counts per location
+<!-- SECTION:NOTES:END -->
