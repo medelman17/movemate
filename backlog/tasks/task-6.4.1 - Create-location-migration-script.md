@@ -1,9 +1,10 @@
 ---
 id: task-6.4.1
 title: Create location migration script
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:30'
+updated_date: '2026-01-13 16:03'
 labels:
   - database
   - script
@@ -20,9 +21,9 @@ TypeScript script to migrate existing text-based locations to structured locatio
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Script in scripts/ folder
-- [ ] #2 Dry-run mode shows what would change
-- [ ] #3 Icon matching for common room names
-- [ ] #4 Updates items with location_id
-- [ ] #5 Reports success/failure counts
+- [x] #1 Script in scripts/ folder
+- [x] #2 Dry-run mode shows what would change
+- [x] #3 Icon matching for common room names
+- [x] #4 Updates items with location_id
+- [x] #5 Reports success/failure counts
 <!-- AC:END -->
