@@ -1,10 +1,10 @@
 ---
 id: task-6
 title: Implement User Locations (Phase 1 - Custom Taxonomies)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:05'
-updated_date: '2026-01-13 15:07'
+updated_date: '2026-01-13 16:32'
 labels:
   - feature
   - database
@@ -34,14 +34,14 @@ This is Phase 1 of the custom taxonomies feature. Categories, retailers, and tag
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Users can create, read, update, delete their own locations
-- [ ] #2 Items reference locations by ID with proper FK
-- [ ] #3 LocationSelector component with inline creation
-- [ ] #4 Location management page in settings
-- [ ] #5 Existing free-text locations migrated to structured records
-- [ ] #6 Default locations seeded for new users
-- [ ] #7 Delete handling with item reassignment option
-- [ ] #8 RLS policies enforce user isolation
+- [x] #1 Users can create, read, update, delete their own locations
+- [x] #2 Items reference locations by ID with proper FK
+- [x] #3 LocationSelector component with inline creation
+- [x] #4 Location management page in settings
+- [x] #5 Existing free-text locations migrated to structured records
+- [x] #6 Default locations seeded for new users
+- [x] #7 Delete handling with item reassignment option
+- [x] #8 RLS policies enforce user isolation
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -88,3 +88,9 @@ task-6.10 (testing)
 task-6.2 → task-6.7 (settings page) → task-6.8 (delete modal)
 ```
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed 2026-01-13: All components implemented, migration ran successfully (25 items across 2 users).
+<!-- SECTION:NOTES:END -->

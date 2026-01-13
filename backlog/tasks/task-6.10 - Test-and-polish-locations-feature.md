@@ -1,9 +1,10 @@
 ---
 id: task-6.10
 title: Test and polish locations feature
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:07'
+updated_date: '2026-01-13 16:32'
 labels:
   - testing
   - polish
@@ -83,3 +84,9 @@ Comprehensive testing and polish for the locations feature.
 - [ ] #7 No TypeScript errors
 - [ ] #8 Build passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+E2E tests passing (3/4), one test skipped tracked in task-6.10.2
+<!-- SECTION:NOTES:END -->

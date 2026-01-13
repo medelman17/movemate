@@ -1,9 +1,10 @@
 ---
 id: task-6.4
 title: Migrate existing location text to location_id
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:06'
+updated_date: '2026-01-13 16:32'
 labels:
   - database
   - migration
