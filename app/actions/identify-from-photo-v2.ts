@@ -4,9 +4,11 @@ import { generateObject, createGateway } from "ai";
 import {
   buildStrategicPrompt,
   strategicIdentificationSchema,
+  STRATEGIC_META,
   type StrategicIdentification,
   type ClarificationQuestion,
 } from "@/lib/prompts/photo-identification";
+import { resolveModelConfig } from "@/lib/prompts/resolve";
 import { buildPhotoIdentificationTelemetry } from "@/lib/langfuse/telemetry";
 import { getActiveTraceId } from "@langfuse/tracing";
 
@@ -105,6 +107,9 @@ export async function identifyProductFromPhotoV2(
     // Build prompt with context and answers
     const promptText = buildStrategicPrompt({ userContext, previousAnswers });
 
+    // Resolve model config (supports env overrides)
+    const modelConfig = resolveModelConfig(STRATEGIC_META);
+
     // Build telemetry configuration for Langfuse
     const telemetry = buildPhotoIdentificationTelemetry({
       hasContext: !!userContext,
@@ -114,7 +119,7 @@ export async function identifyProductFromPhotoV2(
 
     // Single structured call to vision model via Vercel AI Gateway
     const { object } = await generateObject({
-      model: gateway("openai/gpt-4o"),
+      model: gateway(modelConfig.model),
       schema: strategicIdentificationSchema,
       messages: [
         {
@@ -131,8 +136,8 @@ export async function identifyProductFromPhotoV2(
           ],
         },
       ],
-      maxOutputTokens: 800,
-      temperature: 0.3,
+      maxOutputTokens: modelConfig.maxTokens,
+      temperature: modelConfig.temperature ?? 0.3,
       experimental_telemetry: telemetry,
     });
 

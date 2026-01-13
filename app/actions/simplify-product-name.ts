@@ -2,6 +2,7 @@
 
 import { generateText, createGateway } from "ai"
 import { simplifyNameSystemPrompt, SIMPLIFY_NAME_META } from "@/lib/prompts/utilities"
+import { resolveModelConfig } from "@/lib/prompts/resolve"
 import { buildSimplifyNameTelemetry } from "@/lib/langfuse/telemetry"
 
 // Create Vercel AI Gateway instance
@@ -25,13 +26,16 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
   }
 
   try {
+    // Resolve model config (supports env overrides)
+    const modelConfig = resolveModelConfig(SIMPLIFY_NAME_META)
+
     // Build telemetry configuration for Langfuse
     const telemetry = buildSimplifyNameTelemetry({
       originalNameLength: fullProductName.length,
     })
 
     const { text } = await generateText({
-      model: gateway(SIMPLIFY_NAME_META.model),
+      model: gateway(modelConfig.model),
       messages: [
         {
           role: "system",
@@ -42,7 +46,7 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
           content: fullProductName,
         },
       ],
-      maxOutputTokens: SIMPLIFY_NAME_META.maxTokens,
+      maxOutputTokens: modelConfig.maxTokens,
       experimental_telemetry: telemetry,
     })
 
