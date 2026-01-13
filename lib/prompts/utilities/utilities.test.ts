@@ -113,7 +113,7 @@ describe("Utility Prompts", () => {
     it("should have required metadata fields", () => {
       expect(SIMPLIFY_NAME_META.id).toBe("simplify-product-name");
       expect(SIMPLIFY_NAME_META.version).toBeDefined();
-      expect(SIMPLIFY_NAME_META.model).toBe("openai/gpt-4o-mini");
+      expect(SIMPLIFY_NAME_META.model).toBe("openai/gpt-5-mini");
       expect(SIMPLIFY_NAME_META.maxTokens).toBe(50);
       expect(SIMPLIFY_NAME_META.description).toBeDefined();
       expect(Array.isArray(SIMPLIFY_NAME_META.changelog)).toBe(true);

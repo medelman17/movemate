@@ -359,8 +359,8 @@ describe("Photo Identification Prompts", () => {
     describe("STRATEGIC_META", () => {
       it("should have required metadata fields", () => {
         expect(STRATEGIC_META.id).toBe("photo-identification-strategic");
-        expect(STRATEGIC_META.version).toBe("2.0.0");
-        expect(STRATEGIC_META.model).toBe("openai/gpt-4o");
+        expect(STRATEGIC_META.version).toBe("2.1.0");
+        expect(STRATEGIC_META.model).toBe("openai/gpt-5.2-2025-12-11");
         expect(STRATEGIC_META.maxTokens).toBe(800);
         expect(STRATEGIC_META.description).toBeDefined();
         expect(Array.isArray(STRATEGIC_META.changelog)).toBe(true);
