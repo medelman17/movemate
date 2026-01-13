@@ -53,12 +53,18 @@ export function buildPhotoIdentificationTelemetry(options: {
   imageType: "base64" | "url";
   clarificationRound?: number;
 }) {
+  const promptName = "photo-identification-strategic";
+  const promptVersion = "2.0.0";
+
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: "photo-identification-strategic",
+    functionId: promptName,
     metadata: {
-      promptVersion: "2.0.0",
+      // Prompt linking for Langfuse correlation
+      promptName,
+      promptVersion,
       promptModel: "openai/gpt-4o",
+      // Call context
       hasContext: options.hasContext,
       hasAnswers: options.hasAnswers,
       imageType: options.imageType,
@@ -80,11 +86,18 @@ export function buildProductResearchTelemetry(options: {
   isUrl: boolean;
   hasPhotoContext: boolean;
 }) {
+  const promptName = options.isUrl ? "product-research-url" : "product-research-search";
+  const promptVersion = "1.0.0";
+
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: "product-research",
+    functionId: promptName,
     metadata: {
+      // Prompt linking for Langfuse correlation
+      promptName,
+      promptVersion,
       promptModel: "perplexity/sonar-pro",
+      // Call context
       isUrl: options.isUrl,
       hasPhotoContext: options.hasPhotoContext,
       ...(options.userId && { userId: options.userId }),
@@ -101,11 +114,18 @@ export function buildSimplifyNameTelemetry(options: {
   sessionId?: string;
   originalNameLength: number;
 }) {
+  const promptName = "simplify-product-name";
+  const promptVersion = "1.0.0";
+
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: "simplify-product-name",
+    functionId: promptName,
     metadata: {
+      // Prompt linking for Langfuse correlation
+      promptName,
+      promptVersion,
       promptModel: "openai/gpt-4o-mini",
+      // Call context
       originalNameLength: options.originalNameLength,
       ...(options.userId && { userId: options.userId }),
       ...(options.sessionId && { sessionId: options.sessionId }),
