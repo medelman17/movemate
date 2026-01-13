@@ -839,6 +839,42 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     setAiSuggestion(null)
   }
 
+  const resetForm = () => {
+    setUploadedPhoto(null)
+    setIsAnalyzingPhoto(false)
+    setProcessingStage("")
+    setClarificationNeeded(false)
+    setClarificationPhotos([])
+    setPendingResult(null)
+    setStructuredAnswers({})
+    setClarificationRound(0)
+    setAiSuggestion(null)
+    setIsResearching(false)
+    setFormData({
+      name: "",
+      description: "",
+      category: "",
+      category_id: null,
+      location: "",
+      location_id: null,
+      quantity: 1,
+      weight: null,
+      length: null,
+      width: null,
+      height: null,
+      notes: "",
+      is_packed: false,
+      photo_url: null,
+    })
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (!newOpen) {
+      resetForm()
+    }
+  }
+
   const handleAIResearch = async () => {
     if (!formData.name?.trim()) {
       toast({
@@ -954,25 +990,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         })
       }
 
-      setOpen(false)
-      setUploadedPhoto(null)
-      setAiSuggestion(null)
-      setFormData({
-        name: "",
-        description: "",
-        category: "",
-        category_id: null,
-        location: "",
-        location_id: null,
-        quantity: 1,
-        weight: null,
-        length: null,
-        width: null,
-        height: null,
-        notes: "",
-        is_packed: false,
-        photo_url: null,
-      })
+      handleOpenChange(false)
       onItemAdded()
     } catch (error) {
       console.error("Error adding item:", error)
@@ -982,7 +1000,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-2">
           <Plus className="h-4 w-4" />
@@ -1401,7 +1419,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
