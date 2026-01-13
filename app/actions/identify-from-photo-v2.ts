@@ -44,6 +44,7 @@ export interface StrategicIdentificationResult {
   estimates: {
     itemType: string;
     category: string;
+    description: string;
     dimensions: { length: number | null; width: number | null; height: number | null };
     weight: number | null;
     canDisassemble: boolean | null;
@@ -166,6 +167,21 @@ export async function identifyProductFromPhotoV2(
       "Analysis complete"
     );
 
+    // Build description from available visual information
+    const descriptionParts: string[] = [];
+    if (result.styleFamily) {
+      descriptionParts.push(result.styleFamily);
+    }
+    if (result.distinctiveFeatures.length > 0) {
+      descriptionParts.push(result.distinctiveFeatures.join(", "));
+    }
+    if (result.visualEstimates.notes) {
+      descriptionParts.push(result.visualEstimates.notes);
+    }
+    const estimatesDescription = descriptionParts.length > 0
+      ? `${result.itemType}. ${descriptionParts.join(". ")}.`
+      : result.itemType;
+
     // Transform to result format
     const output: StrategicIdentificationResult = {
       identified: result.immediateIdentification
@@ -182,6 +198,7 @@ export async function identifyProductFromPhotoV2(
       estimates: {
         itemType: result.itemType,
         category: result.category,
+        description: estimatesDescription,
         dimensions: result.visualEstimates.dimensions,
         weight: result.visualEstimates.weight,
         canDisassemble: result.visualEstimates.canDisassemble,

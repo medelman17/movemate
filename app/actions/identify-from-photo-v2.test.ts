@@ -389,6 +389,55 @@ describe("identifyProductFromPhotoV2", () => {
       expect(result.estimates.weight).toBe(60);
     });
 
+    it("includes description in estimates from visual info", async () => {
+      mockGenerateObject.mockResolvedValueOnce(
+        createMockResponse(createValidResponse())
+      );
+
+      const result = await identifyProductFromPhotoV2(
+        "https://example.com/image.jpg"
+      );
+
+      // Should include styleFamily and distinctiveFeatures
+      expect(result.estimates.description).toBe(
+        "Coffee Table. Modern. Wood top, Metal legs."
+      );
+    });
+
+    it("includes notes in description when present", async () => {
+      const responseWithNotes = createValidResponse();
+      responseWithNotes.visualEstimates.notes = "Some wear visible on surface";
+
+      mockGenerateObject.mockResolvedValueOnce(
+        createMockResponse(responseWithNotes)
+      );
+
+      const result = await identifyProductFromPhotoV2(
+        "https://example.com/image.jpg"
+      );
+
+      expect(result.estimates.description).toBe(
+        "Coffee Table. Modern. Wood top, Metal legs. Some wear visible on surface."
+      );
+    });
+
+    it("uses only itemType when no visual info available", async () => {
+      const minimalResponse = createValidResponse();
+      minimalResponse.styleFamily = null;
+      minimalResponse.distinctiveFeatures = [];
+      minimalResponse.visualEstimates.notes = null;
+
+      mockGenerateObject.mockResolvedValueOnce(
+        createMockResponse(minimalResponse)
+      );
+
+      const result = await identifyProductFromPhotoV2(
+        "https://example.com/image.jpg"
+      );
+
+      expect(result.estimates.description).toBe("Coffee Table");
+    });
+
     it("includes features and strategy in response", async () => {
       mockGenerateObject.mockResolvedValueOnce(
         createMockResponse(createValidResponse())
