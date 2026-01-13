@@ -57,7 +57,7 @@ export const buildPrompt: PromptBuilder<StrategicIdentificationContext> = (conte
       : "";
 
   // Final round instruction - no more questions allowed
-  const isFinalRound = clarificationRound !== undefined && clarificationRound >= 4;
+  const isFinalRound = clarificationRound !== undefined && clarificationRound >= 2;
   const finalRoundSection = isFinalRound
     ? `\n\n⚠️ FINAL ROUND - NO MORE QUESTIONS ALLOWED ⚠️
 This is the FINAL clarification round. You MUST NOT ask any more questions.
@@ -110,9 +110,10 @@ CRITICAL RULES:
 1. **ONE strategy per item** - pick the most effective approach
 2. **Maximum 3 questions** - each question must be high-value
 3. **Specific questions** - not "Can you provide more details?" but "Where did you purchase this sofa?"
-4. **Consider user context** - if they already told you something, don't ask again
-5. **Visual estimates ALWAYS** - provide dimension/weight estimates regardless of strategy
-6. **Immediate identification** - if brand/model visible in photo, provide it immediately
+4. **NEVER repeat questions** - if a question appears in PREVIOUS ANSWERS, DO NOT ask it again or any variation of it
+5. **Consider user context** - if they already told you something, don't ask again
+6. **Visual estimates ALWAYS** - provide dimension/weight estimates regardless of strategy
+7. **Immediate identification** - if brand/model visible in photo, provide it immediately
 
 QUESTION QUALITY EXAMPLES:
 
