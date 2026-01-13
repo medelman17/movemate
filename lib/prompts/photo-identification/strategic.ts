@@ -8,12 +8,17 @@ import { movingInventoryContext, itemCategories } from "../shared/moving-context
  */
 export const PROMPT_META: PromptConfig = {
   id: "photo-identification-strategic",
-  version: "2.1.0",
-  model: "openai/gpt-5.2-2025-12-11",
+  version: "2.1.1",
+  model: "openai/gpt-5.2",
   maxTokens: 800,
   description:
     "Single-pass strategic photo identification with smart questioning. Replaces multi-attempt approach.",
   changelog: [
+    {
+      version: "2.1.1",
+      date: "2026-01-13",
+      change: "Use stable gpt-5.2 model ID instead of dated snapshot",
+    },
     {
       version: "2.1.0",
       date: "2026-01-13",

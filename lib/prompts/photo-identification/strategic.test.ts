@@ -11,8 +11,8 @@ describe("strategic prompt", () => {
   describe("PROMPT_META", () => {
     it("has correct metadata structure", () => {
       expect(PROMPT_META.id).toBe("photo-identification-strategic");
-      expect(PROMPT_META.version).toBe("2.1.0");
-      expect(PROMPT_META.model).toBe("openai/gpt-5.2-2025-12-11");
+      expect(PROMPT_META.version).toBe("2.1.1");
+      expect(PROMPT_META.model).toBe("openai/gpt-5.2");
       expect(PROMPT_META.maxTokens).toBe(800);
     });
 
