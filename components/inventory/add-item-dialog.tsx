@@ -29,8 +29,7 @@ import type { ClarificationQuestion } from "@/lib/prompts/photo-identification"
 import { logIdentificationOutcome } from "@/lib/langfuse/scoring"
 import { useToast } from "@/hooks/use-toast"
 import { LocationSelector } from "@/components/inventory/location-selector"
-
-const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
+import { CategorySelector } from "@/components/inventory/category-selector"
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const MIN_IMAGE_DIMENSION = 100 // 100px minimum
@@ -405,6 +404,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     name: "",
     description: "",
     category: "",
+    category_id: null,
     location: "",
     location_id: null,
     quantity: 1,
@@ -903,6 +903,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         name: "",
         description: "",
         category: "",
+        category_id: null,
         location: "",
         location_id: null,
         quantity: 1,
@@ -1238,23 +1239,14 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="category">Category *</Label>
-                <Select
-                  required
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="category">Category</Label>
+                <CategorySelector
+                  value={formData.category_id}
+                  onChange={(categoryId) => setFormData({ ...formData, category_id: categoryId })}
+                  placeholder="Select category..."
+                  allowCreate={true}
+                  allowUnassigned={true}
+                />
               </div>
 
               <div className="grid gap-2">

@@ -15,12 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemWithLocation, ItemFormData } from "@/lib/types"
 import { LocationSelector } from "./location-selector"
-
-const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
+import { CategorySelector } from "./category-selector"
 
 interface EditItemDialogProps {
   item: ItemWithLocation
@@ -39,6 +37,7 @@ export function EditItemDialog({ item, open, onOpenChange, onUpdate }: EditItemD
         name: item.name,
         description: item.description,
         category: item.category,
+        category_id: item.category_id,
         location: item.location,
         location_id: item.location_id,
         quantity: item.quantity,
@@ -102,23 +101,14 @@ export function EditItemDialog({ item, open, onOpenChange, onUpdate }: EditItemD
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-category">Category *</Label>
-                <Select
-                  required
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger id="edit-category">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="edit-category">Category</Label>
+                <CategorySelector
+                  value={formData.category_id}
+                  onChange={(categoryId) => setFormData({ ...formData, category_id: categoryId })}
+                  placeholder="Select category..."
+                  allowCreate={true}
+                  allowUnassigned={true}
+                />
               </div>
 
               <div className="grid gap-2">

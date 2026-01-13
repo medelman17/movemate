@@ -4,6 +4,7 @@ export interface Item {
   name: string
   description: string | null
   category: string
+  category_id: string | null
   location: string
   location_id: string | null
   quantity: number
@@ -39,8 +40,32 @@ export interface Location {
 export type LocationFormData = Pick<Location, "name" | "icon" | "color">
 
 /**
+ * User-defined category for organizing inventory items.
+ */
+export interface Category {
+  id: string
+  user_id: string
+  name: string
+  icon: string | null
+  color: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type CategoryFormData = Pick<Category, "name" | "icon" | "color">
+
+/**
  * Item with expanded location data (from JOIN).
  */
 export interface ItemWithLocation extends Item {
   location_obj?: Location | null
+}
+
+/**
+ * Item with expanded location and category data (from JOIN).
+ */
+export interface ItemWithRelations extends Item {
+  location_obj?: Location | null
+  category_obj?: Category | null
 }
