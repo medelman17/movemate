@@ -190,7 +190,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+        <div className="container mx-auto px-2 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="rounded-xl bg-primary p-2 sm:p-2.5 shrink-0">
@@ -241,50 +241,50 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        <div className="grid gap-2 sm:gap-4 grid-cols-3 mb-4 sm:mb-8">
-          <div className="rounded-lg sm:rounded-xl border bg-card p-3 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+      <main className="container mx-auto px-2 sm:px-6 py-3 sm:py-8">
+        <div className="grid gap-1.5 sm:gap-4 grid-cols-3 mb-3 sm:mb-8">
+          <div className="rounded-lg sm:rounded-xl border bg-card p-2 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-4">
               <div className="rounded-md sm:rounded-lg bg-primary/10 p-1.5 sm:p-3 shrink-0">
                 <BoxIcon className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Items</p>
-                <p className="text-xl sm:text-3xl font-bold">{items.length}</p>
+              <div className="space-y-0">
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight">Total Items</p>
+                <p className="text-lg sm:text-3xl font-bold">{items.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg sm:rounded-xl border bg-card p-3 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          <div className="rounded-lg sm:rounded-xl border bg-card p-2 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-4">
               <div className="rounded-md sm:rounded-lg bg-orange-500/10 p-1.5 sm:p-3 shrink-0">
                 <Truck className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Est. Volume</p>
-                <p className="text-xl sm:text-3xl font-bold">
-                  {totalVolume.toFixed(2)} <span className="text-xs sm:text-lg text-muted-foreground">ft³</span>
+              <div className="space-y-0">
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight">Est. Volume</p>
+                <p className="text-lg sm:text-3xl font-bold">
+                  {totalVolume.toFixed(2)} <span className="text-[10px] sm:text-lg text-muted-foreground">ft³</span>
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg sm:rounded-xl border bg-card p-3 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          <div className="rounded-lg sm:rounded-xl border bg-card p-2 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-4">
               <div className="rounded-md sm:rounded-lg bg-emerald-500/10 p-1.5 sm:p-3 shrink-0">
                 <Scale className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-600" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Weight</p>
-                <p className="text-xl sm:text-3xl font-bold">
-                  {totalWeight.toFixed(2)} <span className="text-xs sm:text-lg text-muted-foreground">lbs</span>
+              <div className="space-y-0">
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-tight">Total Weight</p>
+                <p className="text-lg sm:text-3xl font-bold">
+                  {totalWeight.toFixed(2)} <span className="text-[10px] sm:text-lg text-muted-foreground">lbs</span>
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-3 sm:mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             <Input
@@ -296,7 +296,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="sm:hidden space-y-2">
+        <div className="sm:hidden space-y-2.5">
           {isLoading ? (
             <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
               Loading your inventory...
