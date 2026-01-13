@@ -112,10 +112,3 @@ export function buildSimplifyNameTelemetry(options: {
     },
   };
 }
-
-/**
- * Generate a unique trace ID for correlating cascading calls.
- */
-export function generateTraceId(): string {
-  return `trace_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}

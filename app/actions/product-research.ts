@@ -1,8 +1,14 @@
 "use server"
 
-import { generateText } from "ai"
+import { generateText, createGateway } from "ai"
 import { simplifyProductName } from "./simplify-product-name"
 import { buildResearchPrompt, productInfoSchema, type ProductInfo } from "@/lib/prompts/product-research"
+import { buildProductResearchTelemetry } from "@/lib/langfuse/telemetry"
+
+// Create Vercel AI Gateway instance
+const gateway = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY ?? "",
+})
 
 export type { ProductInfo }
 
@@ -36,10 +42,17 @@ export async function researchProduct(
 
     const prompt = buildResearchPrompt(input, isProductURL, photoContext)
 
+    // Build telemetry configuration for Langfuse
+    const telemetry = buildProductResearchTelemetry({
+      isUrl: isProductURL,
+      hasPhotoContext: !!photoContext,
+    })
+
     const { text } = await generateText({
-      model: "perplexity/sonar-pro" as any, // Provider-specific model string
+      model: gateway("perplexity/sonar-pro"),
       prompt,
       maxOutputTokens: 1000,
+      experimental_telemetry: telemetry,
     })
 
     console.log("[v0] Perplexity Response:", text)

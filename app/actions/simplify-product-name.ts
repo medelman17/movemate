@@ -1,7 +1,13 @@
 "use server"
 
-import { generateText } from "ai"
+import { generateText, createGateway } from "ai"
 import { simplifyNameSystemPrompt, SIMPLIFY_NAME_META } from "@/lib/prompts/utilities"
+import { buildSimplifyNameTelemetry } from "@/lib/langfuse/telemetry"
+
+// Create Vercel AI Gateway instance
+const gateway = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY ?? "",
+})
 
 /**
  * Simplifies a detailed product name into a clean, generic item type.
@@ -19,8 +25,13 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
   }
 
   try {
+    // Build telemetry configuration for Langfuse
+    const telemetry = buildSimplifyNameTelemetry({
+      originalNameLength: fullProductName.length,
+    })
+
     const { text } = await generateText({
-      model: SIMPLIFY_NAME_META.model as any, // Provider-specific model string
+      model: gateway(SIMPLIFY_NAME_META.model),
       messages: [
         {
           role: "system",
@@ -32,6 +43,7 @@ export async function simplifyProductName(fullProductName: string): Promise<stri
         },
       ],
       maxOutputTokens: SIMPLIFY_NAME_META.maxTokens,
+      experimental_telemetry: telemetry,
     })
 
     const simplified = text.trim()

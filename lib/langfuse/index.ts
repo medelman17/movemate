@@ -16,6 +16,13 @@ export {
   buildPhotoIdentificationTelemetry,
   buildProductResearchTelemetry,
   buildSimplifyNameTelemetry,
-  generateTraceId,
   type TelemetryContext,
 } from "./telemetry";
+
+export {
+  runWithTraceContext,
+  getTraceContext,
+  generateTraceId,
+  generateSessionId,
+  type TraceContext,
+} from "./trace-context";
