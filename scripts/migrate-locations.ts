@@ -86,8 +86,9 @@ function guessIcon(locationName: string): string {
   const normalized = locationName.toLowerCase().trim()
 
   // Exact match
-  if (ICON_MAP[normalized]) {
-    return ICON_MAP[normalized]
+  const exactMatch = ICON_MAP[normalized]
+  if (exactMatch) {
+    return exactMatch
   }
 
   // Partial match
@@ -239,7 +240,7 @@ async function migrateLocations(dryRun: boolean): Promise<MigrationStats> {
         }
 
         stats.locationsCreated++
-        existingLocationMap.set(normalizedName, locationId)
+        existingLocationMap.set(normalizedName, locationId!)
       } else {
         console.log(`      ✓ Using existing "${locationName}"`)
       }
