@@ -1,0 +1,68 @@
+name: Sync Prompts to Langfuse
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/prompts/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      label:
+        description: 'Label to apply (staging or production)'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Determine label
+        id: label
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "label=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "label=${{ inputs.label }}" >> $GITHUB_OUTPUT
+          else
+            echo "label=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync prompts to Langfuse
+        env:
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+        run: |
+          if [ "${{ steps.label.outputs.label }}" = "production" ]; then
+            npx tsx scripts/sync-prompts-to-langfuse.ts --production
+          else
+            npx tsx scripts/sync-prompts-to-langfuse.ts
+          fi
+
+      - name: Summary
+        run: |
+          echo "### Prompt Sync Complete :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Label:** ${{ steps.label.outputs.label }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
