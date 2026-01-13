@@ -33,7 +33,7 @@ export const PROMPT_META: PromptConfig = {
  * @returns Formatted prompt string
  */
 export const buildPrompt: PromptBuilder<StrategicIdentificationContext> = (context) => {
-  const { userContext, previousAnswers } = context;
+  const { userContext, previousAnswers, clarificationRound } = context;
 
   const contextSection = userContext
     ? `\n\nUSER CONTEXT:\n${userContext}\n`
@@ -46,6 +46,19 @@ export const buildPrompt: PromptBuilder<StrategicIdentificationContext> = (conte
           .join("\n\n")}\n`
       : "";
 
+  // Final round instruction - no more questions allowed
+  const isFinalRound = clarificationRound !== undefined && clarificationRound >= 1;
+  const finalRoundSection = isFinalRound
+    ? `\n\n⚠️ FINAL ROUND - NO MORE QUESTIONS ALLOWED ⚠️
+This is the FINAL clarification round. You MUST NOT ask any more questions.
+Based on the photo and answers provided, make your BEST identification attempt now.
+- Use the answers provided to narrow down the identification
+- Provide "immediateIdentification" with your best guess
+- Set confidence based on available information ("medium" or "low" if uncertain)
+- Still provide visual estimates as fallback
+- DO NOT include any questions in your response - return an empty questions array\n`
+    : "";
+
   return `You are an expert at identifying household items from photos for moving inventory purposes.
 
 ${movingInventoryContext}
@@ -54,8 +67,7 @@ AVAILABLE CATEGORIES: ${itemCategories.join(", ")}
 
 Your task is to analyze the photo and determine the BEST STRATEGY for identifying this item precisely. Don't just describe what you see—think like a detective about how to find the exact product.
 
-${contextSection}${answersSection}
-
+${contextSection}${answersSection}${finalRoundSection}
 STRATEGIC APPROACHES (choose the most effective):
 
 1. **check_label**: If there might be a physical label, tag, or sticker

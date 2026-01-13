@@ -749,10 +749,12 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
       }
 
       // Call v2 API with structured answers
+      // Pass clarificationRound so AI knows when to stop asking questions
       const result = await identifyProductFromPhotoV2(
         uploadedPhoto,
         userContext,
-        structuredAnswers
+        structuredAnswers,
+        clarificationRound
       )
 
       const nextRound = clarificationRound + 1

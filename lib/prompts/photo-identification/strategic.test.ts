@@ -73,6 +73,48 @@ describe("strategic prompt", () => {
       expect(prompt).not.toContain("PREVIOUS ANSWERS:");
     });
 
+    it("does not include final round warning when clarificationRound is 0", () => {
+      const prompt = buildPrompt({ clarificationRound: 0 });
+
+      expect(prompt).not.toContain("FINAL ROUND");
+      expect(prompt).not.toContain("NO MORE QUESTIONS ALLOWED");
+    });
+
+    it("does not include final round warning when clarificationRound is undefined", () => {
+      const prompt = buildPrompt({});
+
+      expect(prompt).not.toContain("FINAL ROUND");
+      expect(prompt).not.toContain("NO MORE QUESTIONS ALLOWED");
+    });
+
+    it("includes final round warning when clarificationRound is 1", () => {
+      const prompt = buildPrompt({ clarificationRound: 1 });
+
+      expect(prompt).toContain("FINAL ROUND");
+      expect(prompt).toContain("NO MORE QUESTIONS ALLOWED");
+      expect(prompt).toContain("make your BEST identification attempt");
+      expect(prompt).toContain("return an empty questions array");
+    });
+
+    it("includes final round warning when clarificationRound is >= 1", () => {
+      const prompt = buildPrompt({ clarificationRound: 2 });
+
+      expect(prompt).toContain("FINAL ROUND");
+      expect(prompt).toContain("NO MORE QUESTIONS ALLOWED");
+    });
+
+    it("includes final round warning with previous answers", () => {
+      const prompt = buildPrompt({
+        clarificationRound: 1,
+        previousAnswers: { "Where purchased?": "IKEA" },
+      });
+
+      expect(prompt).toContain("PREVIOUS ANSWERS:");
+      expect(prompt).toContain("A: IKEA");
+      expect(prompt).toContain("FINAL ROUND");
+      expect(prompt).toContain("Use the answers provided to narrow down the identification");
+    });
+
     it("includes all strategic approaches", () => {
       const prompt = buildPrompt({});
 

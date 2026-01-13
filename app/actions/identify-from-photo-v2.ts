@@ -83,7 +83,8 @@ export interface StrategicIdentificationResult {
 export async function identifyProductFromPhotoV2(
   imageUrl: string,
   userContext?: string,
-  previousAnswers?: Record<string, string>
+  previousAnswers?: Record<string, string>,
+  clarificationRound?: number
 ): Promise<StrategicIdentificationResult> {
   const startTime = Date.now();
 
@@ -105,7 +106,7 @@ export async function identifyProductFromPhotoV2(
     );
 
     // Build prompt with context and answers
-    const promptText = buildStrategicPrompt({ userContext, previousAnswers });
+    const promptText = buildStrategicPrompt({ userContext, previousAnswers, clarificationRound });
 
     // Resolve model config (supports env overrides)
     const modelConfig = resolveModelConfig(STRATEGIC_META);
