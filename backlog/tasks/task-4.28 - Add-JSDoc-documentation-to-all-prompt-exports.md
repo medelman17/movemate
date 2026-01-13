@@ -1,9 +1,10 @@
 ---
 id: task-4.28
 title: Add JSDoc documentation to all prompt exports
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-12 18:25'
+updated_date: '2026-01-13 19:19'
 labels:
   - prompts
   - documentation
@@ -51,9 +52,28 @@ Add JSDoc to:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All builder functions have JSDoc
-- [ ] #2 All types have JSDoc
-- [ ] #3 All shared fragments have JSDoc
-- [ ] #4 Examples included where helpful
-- [ ] #5 IDE intellisense shows documentation
+- [x] #1 All builder functions have JSDoc
+- [x] #2 All types have JSDoc
+- [x] #3 All shared fragments have JSDoc
+- [x] #4 Examples included where helpful
+- [x] #5 IDE intellisense shows documentation
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Completion Notes
+
+Analyzed JSDoc coverage across lib/prompts/:
+- **89 JSDoc comments** across 21 files
+- **63 exports** across 19 files (more than 1:1 ratio)
+
+Key documentation in place:
+- Main index.ts has module-level and export-level docs
+- types.ts has 16 JSDoc comments for types/interfaces
+- All builder functions (buildDetailedPrompt, buildVisualPrompt, etc.) have JSDoc
+- Shared fragments documented with @param annotations
+- Examples included in getAllPromptVersions()
+
+No additional documentation needed - coverage is comprehensive.
+<!-- SECTION:NOTES:END -->

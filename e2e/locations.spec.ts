@@ -8,12 +8,6 @@ async function loginAsTestUser(page: Page) {
   }
 }
 
-// Helper to select from shadcn Select component
-async function selectOption(page: Page, triggerId: string, optionText: string) {
-  await page.locator(`#${triggerId}`).click();
-  await page.locator(`[role="option"]:has-text("${optionText}")`).click();
-}
-
 test.describe("Locations Feature", () => {
   test.setTimeout(60000); // 1 minute timeout
 
@@ -126,9 +120,15 @@ test.describe("Locations Feature", () => {
     // Fill in basic item info first
     await page.locator("#name").fill("E2E Test Item");
 
-    // Select category using shadcn Select
-    await page.locator("#category").click();
-    await page.locator('[role="option"]:has-text("Furniture")').click();
+    // Select category using CategorySelector (first combobox in dialog)
+    const categoryCombobox = page.getByRole('dialog').locator('button[role="combobox"]').first();
+    await expect(categoryCombobox).toBeVisible({ timeout: 10000 });
+    await expect(categoryCombobox).toBeEnabled({ timeout: 15000 });
+    await categoryCombobox.click();
+    await expect(page.locator('[cmdk-input]')).toBeVisible();
+    await page.locator('[cmdk-item]:has-text("Furniture")').click();
+    // Wait for category popover to close
+    await expect(page.locator('[cmdk-input]')).not.toBeVisible({ timeout: 5000 });
 
     // Take screenshot before location selection
     await page.screenshot({ path: "e2e/screenshots/locations-06-before-location.png" });
@@ -199,9 +199,15 @@ test.describe("Locations Feature", () => {
     const itemName = `Badge Test Item ${Date.now()}`;
     await page.locator("#name").fill(itemName);
 
-    // Select category
-    await page.locator("#category").click();
-    await page.locator('[role="option"]:has-text("Electronics")').click();
+    // Select category (first combobox in dialog)
+    const categoryCombobox2 = page.getByRole('dialog').locator('button[role="combobox"]').first();
+    await expect(categoryCombobox2).toBeVisible({ timeout: 10000 });
+    await expect(categoryCombobox2).toBeEnabled({ timeout: 15000 });
+    await categoryCombobox2.click();
+    await expect(page.locator('[cmdk-input]')).toBeVisible();
+    await page.locator('[cmdk-item]:has-text("Electronics")').click();
+    // Wait for category popover to close
+    await expect(page.locator('[cmdk-input]')).not.toBeVisible({ timeout: 5000 });
 
     // Select an existing location (Living Room should be seeded)
     // The LocationSelector is the second combobox in the dialog (first is Category)
@@ -242,8 +248,7 @@ test.describe("Locations Feature", () => {
     console.log("Location badge display test completed!");
   });
 
-  // TODO: Fix dropdown menu selector - see backlog task-6.10.2
-  test.skip("edit item allows changing location", async ({ page }) => {
+  test("edit item allows changing location", async ({ page }) => {
     await loginAsTestUser(page);
 
     // First create an item
@@ -253,9 +258,15 @@ test.describe("Locations Feature", () => {
     const itemName = `Edit Location Test ${Date.now()}`;
     await page.locator("#name").fill(itemName);
 
-    // Select category
-    await page.locator("#category").click();
-    await page.locator('[role="option"]:has-text("Decor")').click();
+    // Select category (first combobox in dialog)
+    const categoryCombobox3 = page.getByRole('dialog').locator('button[role="combobox"]').first();
+    await expect(categoryCombobox3).toBeVisible({ timeout: 10000 });
+    await expect(categoryCombobox3).toBeEnabled({ timeout: 15000 });
+    await categoryCombobox3.click();
+    await expect(page.locator('[cmdk-input]')).toBeVisible();
+    await page.locator('[cmdk-item]:has-text("Decor")').click();
+    // Wait for category popover to close
+    await expect(page.locator('[cmdk-input]')).not.toBeVisible({ timeout: 5000 });
 
     // Select Living Room
     // The LocationSelector is the second combobox in the dialog (first is Category)
@@ -281,14 +292,16 @@ test.describe("Locations Feature", () => {
     console.log(`Found ${itemCount} elements with item name`);
     expect(itemCount).toBeGreaterThan(0);
 
-    // Find the item row and click the dropdown menu
-    // Use a broader selector to find the clickable element near the item
-    // The item might be in a table row or a card, click the first button we find
-    const itemContainer = page.locator(`tr:has-text("${itemName}")`).or(
-      page.locator(`div:has-text("${itemName}")`)
+    // Find the item row and click the dropdown menu (Actions button with sr-only text)
+    // The item might be in a table row or a card
+    const itemRow = page.locator(`tr:has-text("${itemName}")`);
+    const itemCard = page.locator(`[class*="Card"]:has-text("${itemName}")`);
+
+    // Click the Actions dropdown trigger (button with sr-only "Actions" text)
+    const actionsButton = itemRow.getByRole('button', { name: 'Actions' }).or(
+      itemCard.getByRole('button', { name: 'Actions' })
     ).first();
-    // Click the three-dot menu button (should be a button element)
-    await itemContainer.locator('button').first().click();
+    await actionsButton.click();
 
     // Click Edit from the dropdown
     await page.locator('[role="menuitem"]:has-text("Edit")').click();

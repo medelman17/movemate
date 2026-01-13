@@ -4,6 +4,7 @@ title: Delete simplify-product-name.ts (now redundant)
 status: To Do
 assignee: []
 created_date: '2026-01-12 18:01'
+updated_date: '2026-01-13 17:42'
 labels:
   - cleanup
   - performance
@@ -34,3 +35,9 @@ This eliminates one API call from the pipeline.
 - [ ] #4 No broken imports
 - [ ] #5 One less API call in the flow
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Still used in product-research.ts as fallback when AI doesn't return simplified name. Either: (1) update product research prompt to always return name field, or (2) keep the file. Deferring for now.
+<!-- SECTION:NOTES:END -->
