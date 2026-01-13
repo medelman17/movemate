@@ -58,7 +58,7 @@ export function buildPhotoIdentificationTelemetry(options: {
     functionId: "photo-identification-strategic",
     metadata: {
       promptVersion: "2.0.0",
-      promptModel: "google/gemini-2.0-flash-001",
+      promptModel: "openai/gpt-4o",
       hasContext: options.hasContext,
       hasAnswers: options.hasAnswers,
       imageType: options.imageType,
