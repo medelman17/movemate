@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Edit, Trash2, Package, MapPin, Ruler, Weight } from "lucide-react"
+import { MoreVertical, Edit, Trash2, Package, Ruler, Weight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { Item } from "@/lib/types"
+import type { ItemWithLocation } from "@/lib/types"
 import { EditItemDialog } from "./edit-item-dialog"
 
 interface ItemMobileCardProps {
-  item: Item
+  item: ItemWithLocation
   onUpdate: () => void
   isSelected?: boolean
   onSelectionChange?: (id: string, selected: boolean) => void
@@ -81,8 +81,10 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
                 <span className="font-medium">{item.quantity}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs min-w-0">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate font-medium">{item.location}</span>
+                <span className="shrink-0">{item.location_obj?.icon || "📍"}</span>
+                <span className="truncate font-medium">
+                  {item.location_obj?.name || item.location || "Unassigned"}
+                </span>
               </div>
               {dimensions && (
                 <div className="flex items-center gap-1.5 text-xs col-span-2">

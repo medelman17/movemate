@@ -1,9 +1,10 @@
 ---
 id: task-6.6
 title: Integrate LocationSelector into add-item-dialog
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:06'
+updated_date: '2026-01-13 15:24'
 labels:
   - ui
   - integration
@@ -81,3 +82,19 @@ const formSchema = z.object({
 - [ ] #5 Pre-selection works when context provided
 - [ ] #6 Backward compatible with existing items
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed: Integrated LocationSelector into add-item-dialog
+
+- Added LocationSelector import
+
+- Added location_id to formData state (initial and reset)
+
+- Replaced hardcoded LOCATIONS Select with LocationSelector component
+
+- Removed unused LOCATIONS constant
+
+- Build passes successfully
+<!-- SECTION:NOTES:END -->

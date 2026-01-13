@@ -17,13 +17,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
-import type { Item, ItemFormData } from "@/lib/types"
+import type { ItemWithLocation, ItemFormData } from "@/lib/types"
+import { LocationSelector } from "./location-selector"
 
 const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
-const LOCATIONS = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "Garage", "Storage", "Office", "Other"]
 
 interface EditItemDialogProps {
-  item: Item
+  item: ItemWithLocation
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdate: () => void
@@ -40,6 +40,7 @@ export function EditItemDialog({ item, open, onOpenChange, onUpdate }: EditItemD
         description: item.description,
         category: item.category,
         location: item.location,
+        location_id: item.location_id,
         quantity: item.quantity,
         weight: item.weight,
         length: item.length,
@@ -121,23 +122,14 @@ export function EditItemDialog({ item, open, onOpenChange, onUpdate }: EditItemD
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="edit-location">Location *</Label>
-                <Select
-                  required
-                  value={formData.location}
-                  onValueChange={(value) => setFormData({ ...formData, location: value })}
-                >
-                  <SelectTrigger id="edit-location">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATIONS.map((loc) => (
-                      <SelectItem key={loc} value={loc}>
-                        {loc}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="edit-location">Location</Label>
+                <LocationSelector
+                  value={formData.location_id}
+                  onChange={(locationId) => setFormData({ ...formData, location_id: locationId })}
+                  placeholder="Select location..."
+                  allowCreate={true}
+                  allowUnassigned={true}
+                />
               </div>
             </div>
 

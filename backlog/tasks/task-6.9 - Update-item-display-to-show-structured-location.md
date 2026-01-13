@@ -1,9 +1,10 @@
 ---
 id: task-6.9
 title: Update item display to show structured location
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:07'
+updated_date: '2026-01-13 15:28'
 labels:
   - ui
   - integration
@@ -89,10 +90,34 @@ interface LocationBadgeProps {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Item list shows location with icon
-- [ ] #2 Item cards display location badge
-- [ ] #3 Edit item uses LocationSelector
-- [ ] #4 Fallback to text location if no location_id
-- [ ] #5 LocationBadge component created
-- [ ] #6 Unassigned items handled gracefully
+- [x] #1 Item list shows location with icon
+- [x] #2 Item cards display location badge
+- [x] #3 Edit item uses LocationSelector
+- [x] #4 Fallback to text location if no location_id
+- [x] #5 LocationBadge component created
+- [x] #6 Unassigned items handled gracefully
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed: Updated item display to show structured location
+
+- Updated app/page.tsx to join locations table with items query
+
+- Created LocationBadge component for consistent location display
+
+- Updated item-card.tsx to use LocationBadge and ItemWithLocation type
+
+- Updated item-table-row.tsx to use LocationBadge and ItemWithLocation type
+
+- Updated item-mobile-card.tsx to show location with icon
+
+- Updated edit-item-dialog.tsx to use LocationSelector
+
+- Fallback to legacy text location if no location_id
+
+- Unassigned items show 'Unassigned' gracefully
+
+- Build passes successfully
+<!-- SECTION:NOTES:END -->

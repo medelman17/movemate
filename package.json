@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.7",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
     "@langfuse/client": "^4.5.1",
     "@langfuse/otel": "^4.5.1",

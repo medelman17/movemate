@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Edit, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { Item } from "@/lib/types"
+import type { ItemWithLocation } from "@/lib/types"
 import { EditItemDialog } from "./edit-item-dialog"
 import { TableCell, TableRow } from "@/components/ui/table"
+import { LocationBadge } from "./location-badge"
 
 interface ItemTableRowProps {
-  item: Item
+  item: ItemWithLocation
   onUpdate: () => void
   isSelected?: boolean
   onSelectionChange?: (id: string, selected: boolean) => void
@@ -67,9 +68,11 @@ export function ItemTableRow({ item, onUpdate, isSelected = false, onSelectionCh
         <TableCell className="text-center">{item.quantity}</TableCell>
         <TableCell>
           <div className="space-y-1">
-            <Badge variant="secondary" className="text-xs">
-              {item.location}
-            </Badge>
+            <LocationBadge
+              location={item.location_obj}
+              fallbackText={item.location}
+              size="sm"
+            />
             <div className="text-sm text-muted-foreground">{item.category}</div>
           </div>
         </TableCell>

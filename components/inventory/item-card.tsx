@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Edit, MoreVertical, Trash2, MapPin, PackageIcon, Weight, Ruler } from "lucide-react"
+import { Edit, MoreVertical, Trash2, PackageIcon, Weight, Ruler } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { Item } from "@/lib/types"
+import type { ItemWithLocation } from "@/lib/types"
 import { EditItemDialog } from "./edit-item-dialog"
+import { LocationBadge } from "./location-badge"
 
 interface ItemCardProps {
-  item: Item
+  item: ItemWithLocation
   onUpdate: () => void
   isSelected?: boolean
   onSelectionChange?: (id: string, selected: boolean) => void
@@ -106,10 +107,10 @@ export function ItemCard({ item, onUpdate, isSelected = false, onSelectionChange
               <PackageIcon className="h-3 w-3" />
               {item.category}
             </Badge>
-            <Badge variant="outline" className="gap-1">
-              <MapPin className="h-3 w-3" />
-              {item.location}
-            </Badge>
+            <LocationBadge
+              location={item.location_obj}
+              fallbackText={item.location}
+            />
             {item.quantity > 1 && <Badge variant="outline">Qty: {item.quantity}</Badge>}
           </div>
 

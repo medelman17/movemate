@@ -1,9 +1,10 @@
 ---
 id: task-6.8
 title: Implement location delete with item reassignment
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:07'
+updated_date: '2026-01-13 15:36'
 labels:
   - ui
   - component
@@ -81,3 +82,9 @@ interface DeleteLocationModalProps {
 - [ ] #5 Cannot reassign to self
 - [ ] #6 Proper error handling
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed via task-6.8.1
+<!-- SECTION:NOTES:END -->

@@ -7,12 +7,17 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { LogOut, Search, Download, Truck, Scale, BoxIcon } from "lucide-react"
+import { LogOut, Search, Download, Truck, Scale, BoxIcon, Settings } from "lucide-react"
 import { AddItemDialog } from "@/components/inventory/add-item-dialog"
 import { ItemTableRow } from "@/components/inventory/item-table-row"
 import { ItemMobileCard } from "@/components/inventory/item-mobile-card"
 import { BulkActionsBar } from "@/components/inventory/bulk-actions-bar"
-import type { Item } from "@/lib/types"
+import type { Item, Location, ItemWithLocation } from "@/lib/types"
+
+// Extended item type with joined location data from Supabase
+interface ItemWithLocationJoin extends Item {
+  locations: Location | null
+}
 import { useRouter } from "next/navigation"
 
 const AUTO_LOGIN_ENABLED = true
@@ -20,8 +25,8 @@ const TEST_USER_EMAIL = "test@movemate.com"
 const TEST_USER_PASSWORD = "testpassword123"
 
 export default function HomePage() {
-  const [items, setItems] = useState<Item[]>([])
-  const [filteredItems, setFilteredItems] = useState<Item[]>([])
+  const [items, setItems] = useState<ItemWithLocation[]>([])
+  const [filteredItems, setFilteredItems] = useState<ItemWithLocation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, _setCategoryFilter] = useState<string>("all")
@@ -65,10 +70,21 @@ export default function HomePage() {
   const loadItems = async () => {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.from("items").select("*").order("created_at", { ascending: false })
+      // Join with locations table to get location details
+      const { data, error } = await supabase
+        .from("items")
+        .select("*, locations(*)")
+        .order("created_at", { ascending: false })
 
       if (error) throw error
-      setItems(data || [])
+
+      // Transform to include location_obj for easier access
+      const itemsWithLocation = (data as ItemWithLocationJoin[] || []).map((item) => ({
+        ...item,
+        location_obj: item.locations,
+      }))
+
+      setItems(itemsWithLocation)
     } catch (error) {
       console.error("Error loading items:", error)
     } finally {
@@ -206,6 +222,16 @@ export default function HomePage() {
                 <Download className="h-4 w-4" />
               </Button>
               <AddItemDialog onItemAdded={loadItems} />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/settings/locations")}
+                className="h-9 w-9 sm:h-10 sm:w-10"
+                title="Manage locations"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">Settings</span>
+              </Button>
               <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-9 w-9 sm:h-10 sm:w-10">
                 <LogOut className="h-4 w-4" />
                 <span className="sr-only">Sign out</span>

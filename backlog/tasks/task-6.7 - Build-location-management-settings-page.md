@@ -1,9 +1,10 @@
 ---
 id: task-6.7
 title: Build location management settings page
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 15:07'
+updated_date: '2026-01-13 15:40'
 labels:
   - ui
   - page
@@ -87,3 +88,9 @@ Create a settings page for users to manage their locations (view, edit, delete, 
 - [ ] #6 Item counts displayed
 - [ ] #7 Empty state handled
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+All subtasks completed: task-6.7.1, task-6.7.2, task-6.7.3, task-6.7.4
+<!-- SECTION:NOTES:END -->

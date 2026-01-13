@@ -28,9 +28,9 @@ import {
 import type { ClarificationQuestion } from "@/lib/prompts/photo-identification"
 import { logIdentificationOutcome } from "@/lib/langfuse/scoring"
 import { useToast } from "@/hooks/use-toast"
+import { LocationSelector } from "@/components/inventory/location-selector"
 
 const CATEGORIES = ["Furniture", "Electronics", "Kitchenware", "Clothing", "Books", "Decor", "Tools", "Other"]
-const LOCATIONS = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "Garage", "Storage", "Office", "Other"]
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const MIN_IMAGE_DIMENSION = 100 // 100px minimum
@@ -406,6 +406,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
     description: "",
     category: "",
     location: "",
+    location_id: null,
     quantity: 1,
     weight: null,
     length: null,
@@ -903,6 +904,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         description: "",
         category: "",
         location: "",
+        location_id: null,
         quantity: 1,
         weight: null,
         length: null,
@@ -1256,23 +1258,14 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="location">Location *</Label>
-                <Select
-                  required
-                  value={formData.location}
-                  onValueChange={(value) => setFormData({ ...formData, location: value })}
-                >
-                  <SelectTrigger id="location">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATIONS.map((loc) => (
-                      <SelectItem key={loc} value={loc}>
-                        {loc}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="location">Location</Label>
+                <LocationSelector
+                  value={formData.location_id}
+                  onChange={(locationId) => setFormData({ ...formData, location_id: locationId })}
+                  placeholder="Select location..."
+                  allowCreate={true}
+                  allowUnassigned={true}
+                />
               </div>
             </div>
 
