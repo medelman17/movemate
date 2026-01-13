@@ -1,5 +1,7 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { LangfuseSpanProcessor } from "@langfuse/otel";
+import { PinoInstrumentation } from "@opentelemetry/instrumentation-pino";
+import { telemetryLogger } from "@/lib/logger";
 
 let sdk: NodeSDK | null = null;
 
@@ -15,7 +17,7 @@ let sdk: NodeSDK | null = null;
  */
 export function registerLangfuseInstrumentation() {
   if (process.env.LANGFUSE_ENABLED !== "true") {
-    console.log("[Langfuse] Tracing disabled (LANGFUSE_ENABLED !== 'true')");
+    telemetryLogger.debug("Tracing disabled (LANGFUSE_ENABLED !== 'true')");
     return;
   }
 
@@ -24,7 +26,7 @@ export function registerLangfuseInstrumentation() {
   const baseUrl = process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_BASEURL || "https://cloud.langfuse.com";
 
   if (!publicKey || !secretKey) {
-    console.error("[Langfuse] Missing LANGFUSE_PUBLIC_KEY or LANGFUSE_SECRET_KEY");
+    telemetryLogger.error("Missing LANGFUSE_PUBLIC_KEY or LANGFUSE_SECRET_KEY");
     return;
   }
 
@@ -39,18 +41,19 @@ export function registerLangfuseInstrumentation() {
 
   sdk = new NodeSDK({
     spanProcessors: [langfuseSpanProcessor],
+    instrumentations: [new PinoInstrumentation()],
   });
 
   sdk.start();
-  console.log("[Langfuse] OpenTelemetry instrumentation started");
+  telemetryLogger.info("OpenTelemetry instrumentation started");
 
   // Graceful shutdown
   const shutdown = async () => {
     try {
       await sdk?.shutdown();
-      console.log("[Langfuse] OpenTelemetry SDK shut down gracefully");
+      telemetryLogger.info("OpenTelemetry SDK shut down gracefully");
     } catch (error) {
-      console.error("[Langfuse] Error during shutdown:", error);
+      telemetryLogger.error({ error }, "Error during shutdown");
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { Category, CategoryFormData } from "@/lib/types";
+import { dbLogger } from "@/lib/logger";
 
 /**
  * Get all categories for the current user, sorted by sort_order.
@@ -16,7 +17,7 @@ export async function getCategories(): Promise<Category[]> {
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[categories] Error fetching categories:", error);
+    dbLogger.error({ error }, "Error fetching categories");
     throw new Error("Failed to load categories");
   }
 
@@ -41,7 +42,7 @@ export async function getCategoryById(id: string): Promise<Category | null> {
       // No rows returned
       return null;
     }
-    console.error("[categories] Error fetching category:", error);
+    dbLogger.error({ error }, "Error fetching category");
     throw new Error("Failed to load category");
   }
 
@@ -106,7 +107,7 @@ export async function createCategory(
       // Unique constraint violation
       throw new Error("A category with this name already exists");
     }
-    console.error("[categories] Error creating category:", error);
+    dbLogger.error({ error }, "Error creating category");
     throw new Error("Failed to create category");
   }
 
@@ -156,7 +157,7 @@ export async function updateCategory(
     if (error.code === "PGRST116") {
       throw new Error("Category not found");
     }
-    console.error("[categories] Error updating category:", error);
+    dbLogger.error({ error }, "Error updating category");
     throw new Error("Failed to update category");
   }
 
@@ -201,7 +202,7 @@ export async function deleteCategory(
       .eq("category_id", id);
 
     if (reassignError) {
-      console.error("[categories] Error reassigning items:", reassignError);
+      dbLogger.error({ error: reassignError }, "Error reassigning items");
       throw new Error("Failed to reassign items");
     }
   }
@@ -213,7 +214,7 @@ export async function deleteCategory(
     if (error.code === "PGRST116") {
       throw new Error("Category not found");
     }
-    console.error("[categories] Error deleting category:", error);
+    dbLogger.error({ error }, "Error deleting category");
     throw new Error("Failed to delete category");
   }
 }
@@ -238,7 +239,7 @@ export async function reorderCategories(orderedIds: string[]): Promise<void> {
 
   const errors = results.filter((r) => r.error);
   if (errors.length > 0) {
-    console.error("[categories] Errors reordering categories:", errors);
+    dbLogger.error({ errors }, "Errors reordering categories");
     throw new Error("Failed to reorder categories");
   }
 }
@@ -256,7 +257,7 @@ export async function getCategoryItemCounts(): Promise<Record<string, number>> {
     .select("category_id");
 
   if (error) {
-    console.error("[categories] Error fetching item counts:", error);
+    dbLogger.error({ error }, "Error fetching item counts");
     throw new Error("Failed to load item counts");
   }
 
@@ -325,10 +326,10 @@ export async function seedDefaultCategoriesIfNeeded(): Promise<Category[]> {
     .select();
 
   if (error) {
-    console.error("[categories] Error seeding default categories:", error);
+    dbLogger.error({ error }, "Error seeding default categories");
     throw new Error("Failed to create default categories");
   }
 
-  console.log(`[categories] Seeded ${data.length} default categories for user ${user.id}`);
+  dbLogger.info({ count: data.length, userId: user.id }, "Seeded default categories");
   return data;
 }

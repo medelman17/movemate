@@ -11,6 +11,7 @@ import {
 import { resolveModelConfig } from "@/lib/prompts/resolve";
 import { buildPhotoIdentificationTelemetry } from "@/lib/langfuse/telemetry";
 import { getActiveTraceId } from "@langfuse/tracing";
+import { aiLogger } from "@/lib/logger";
 
 // Create Vercel AI Gateway instance
 const gateway = createGateway({
@@ -98,11 +99,10 @@ export async function identifyProductFromPhotoV2(
   try {
     const imageType = imageUrl.startsWith("data:") ? "base64" : "url";
 
-    console.log("[v2] Strategic photo identification started", {
-      hasContext: !!userContext,
-      hasAnswers: !!previousAnswers,
-      imageType,
-    });
+    aiLogger.info(
+      { hasContext: !!userContext, hasAnswers: !!previousAnswers, imageType },
+      "Strategic photo identification started"
+    );
 
     // Build prompt with context and answers
     const promptText = buildStrategicPrompt({ userContext, previousAnswers });
@@ -149,17 +149,21 @@ export async function identifyProductFromPhotoV2(
 
     // Validate result structure
     if (!result.itemType || !result.category || !result.strategy) {
-      console.error("[v2] Invalid response structure:", result);
+      aiLogger.error({ result }, "Invalid response structure");
       throw new Error("AI returned incomplete analysis. Please try again.");
     }
 
-    console.log(`[v2] Analysis complete in ${duration}ms`, {
-      itemType: result.itemType,
-      strategy: result.strategy.approach,
-      hasImmediateId: !!result.immediateIdentification,
-      questionCount: result.strategy.questions.length,
-      confidence: result.strategy.confidence,
-    });
+    aiLogger.info(
+      {
+        durationMs: duration,
+        itemType: result.itemType,
+        strategy: result.strategy.approach,
+        hasImmediateId: !!result.immediateIdentification,
+        questionCount: result.strategy.questions.length,
+        confidence: result.strategy.confidence,
+      },
+      "Analysis complete"
+    );
 
     // Transform to result format
     const output: StrategicIdentificationResult = {
@@ -193,7 +197,7 @@ export async function identifyProductFromPhotoV2(
     return output;
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[v2] Error after ${duration}ms:`, error);
+    aiLogger.error({ error, durationMs: duration }, "Photo identification failed");
 
     // Classify error for better user feedback
     if (error instanceof Error) {
@@ -226,7 +230,7 @@ export async function identifyProductFromPhotoV2(
 
       // API key/auth
       if (message.includes("unauthorized") || message.includes("forbidden") || message.includes("api key")) {
-        console.error("[v2] Authentication error - check API configuration");
+        aiLogger.error({ error }, "Authentication error - check API configuration");
         throw new Error(
           "Service configuration error. Please contact support."
         );
@@ -234,7 +238,7 @@ export async function identifyProductFromPhotoV2(
 
       // Schema validation error
       if (message.includes("schema") || message.includes("json_schema") || message.includes("required")) {
-        console.error("[v2] Schema validation error - check Zod schema compatibility with OpenAI:", error);
+        aiLogger.error({ error }, "Schema validation error - check Zod schema compatibility with OpenAI");
         throw new Error(
           "AI configuration error. Please contact support."
         );

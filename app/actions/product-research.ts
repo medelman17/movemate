@@ -11,6 +11,7 @@ import {
 } from "@/lib/prompts/product-research"
 import { resolveModelConfig } from "@/lib/prompts/resolve"
 import { buildProductResearchTelemetry } from "@/lib/langfuse/telemetry"
+import { aiLogger } from "@/lib/logger"
 
 // Create Vercel AI Gateway instance
 const gateway = createGateway({
@@ -45,7 +46,7 @@ export async function researchProduct(
   try {
     const isProductURL = isURL(input)
 
-    console.log("[v0] Research input:", input, "Is URL:", isProductURL, "Has photo context:", !!photoContext)
+    aiLogger.info({ input, isUrl: isProductURL, hasPhotoContext: !!photoContext }, "Research input")
 
     const prompt = buildResearchPrompt(input, isProductURL, photoContext)
 
@@ -66,11 +67,11 @@ export async function researchProduct(
       experimental_telemetry: telemetry,
     })
 
-    console.log("[v0] Perplexity Response:", text)
+    aiLogger.debug({ responseLength: text.length }, "Perplexity response received")
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      console.error("[v0] No JSON found in response:", text)
+      aiLogger.error({ response: text }, "No JSON found in response")
       throw new Error("Could not parse AI response - no JSON found")
     }
 
@@ -93,11 +94,11 @@ export async function researchProduct(
       canDisassemble: typeof parsedData.canDisassemble === "boolean" ? parsedData.canDisassemble : null,
     })
 
-    console.log("[v0] Successfully parsed product info:", result)
+    aiLogger.info({ name: result.name, category: result.category }, "Successfully parsed product info")
 
     return result
   } catch (error) {
-    console.error("[v0] Error researching product:", error)
+    aiLogger.error({ error }, "Error researching product")
     throw new Error("Failed to research product information")
   }
 }

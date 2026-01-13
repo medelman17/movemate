@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { Location, LocationFormData } from "@/lib/types";
+import { dbLogger } from "@/lib/logger";
 
 /**
  * Get all locations for the current user, sorted by sort_order.
@@ -16,7 +17,7 @@ export async function getLocations(): Promise<Location[]> {
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[locations] Error fetching locations:", error);
+    dbLogger.error({ error }, "Error fetching locations");
     throw new Error("Failed to load locations");
   }
 
@@ -41,7 +42,7 @@ export async function getLocationById(id: string): Promise<Location | null> {
       // No rows returned
       return null;
     }
-    console.error("[locations] Error fetching location:", error);
+    dbLogger.error({ error }, "Error fetching location");
     throw new Error("Failed to load location");
   }
 
@@ -106,7 +107,7 @@ export async function createLocation(
       // Unique constraint violation
       throw new Error("A location with this name already exists");
     }
-    console.error("[locations] Error creating location:", error);
+    dbLogger.error({ error }, "Error creating location");
     throw new Error("Failed to create location");
   }
 
@@ -156,7 +157,7 @@ export async function updateLocation(
     if (error.code === "PGRST116") {
       throw new Error("Location not found");
     }
-    console.error("[locations] Error updating location:", error);
+    dbLogger.error({ error }, "Error updating location");
     throw new Error("Failed to update location");
   }
 
@@ -201,7 +202,7 @@ export async function deleteLocation(
       .eq("location_id", id);
 
     if (reassignError) {
-      console.error("[locations] Error reassigning items:", reassignError);
+      dbLogger.error({ error: reassignError }, "Error reassigning items");
       throw new Error("Failed to reassign items");
     }
   }
@@ -213,7 +214,7 @@ export async function deleteLocation(
     if (error.code === "PGRST116") {
       throw new Error("Location not found");
     }
-    console.error("[locations] Error deleting location:", error);
+    dbLogger.error({ error }, "Error deleting location");
     throw new Error("Failed to delete location");
   }
 }
@@ -238,7 +239,7 @@ export async function reorderLocations(orderedIds: string[]): Promise<void> {
 
   const errors = results.filter((r) => r.error);
   if (errors.length > 0) {
-    console.error("[locations] Errors reordering locations:", errors);
+    dbLogger.error({ errors }, "Errors reordering locations");
     throw new Error("Failed to reorder locations");
   }
 }
@@ -256,7 +257,7 @@ export async function getLocationItemCounts(): Promise<Record<string, number>> {
     .select("location_id");
 
   if (error) {
-    console.error("[locations] Error fetching item counts:", error);
+    dbLogger.error({ error }, "Error fetching item counts");
     throw new Error("Failed to load item counts");
   }
 
@@ -323,10 +324,10 @@ export async function seedDefaultLocationsIfNeeded(): Promise<Location[]> {
     .select();
 
   if (error) {
-    console.error("[locations] Error seeding default locations:", error);
+    dbLogger.error({ error }, "Error seeding default locations");
     throw new Error("Failed to create default locations");
   }
 
-  console.log(`[locations] Seeded ${data.length} default locations for user ${user.id}`);
+  dbLogger.info({ count: data.length, userId: user.id }, "Seeded default locations");
   return data;
 }

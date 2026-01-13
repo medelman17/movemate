@@ -1,6 +1,7 @@
 "use server";
 
 import { LangfuseClient } from "@langfuse/client";
+import { telemetryLogger } from "@/lib/logger";
 
 /**
  * Corrections made by the user to the AI identification.
@@ -29,7 +30,7 @@ function getLangfuseClient(): LangfuseClient | null {
     const secretKey = process.env.LANGFUSE_SECRET_KEY;
 
     if (!publicKey || !secretKey) {
-      console.warn("[Langfuse] Missing API keys, scoring disabled");
+      telemetryLogger.warn("Missing API keys, scoring disabled");
       return null;
     }
 
@@ -72,13 +73,13 @@ export async function logIdentificationOutcome(
 ): Promise<void> {
   // Skip if no traceId (tracing was disabled during identification)
   if (!traceId) {
-    console.log("[Langfuse] No traceId provided, skipping score");
+    telemetryLogger.debug("No traceId provided, skipping score");
     return;
   }
 
   const client = getLangfuseClient();
   if (!client) {
-    console.log("[Langfuse] Client not available, skipping score");
+    telemetryLogger.debug("Client not available, skipping score");
     return;
   }
 
@@ -131,13 +132,12 @@ export async function logIdentificationOutcome(
     // Flush to ensure scores are sent
     await client.flush();
 
-    console.log("[Langfuse] Score logged successfully", {
-      traceId,
-      accepted,
-      hasCorrections: !!corrections,
-    });
+    telemetryLogger.info(
+      { traceId, accepted, hasCorrections: !!corrections },
+      "Score logged successfully"
+    );
   } catch (error) {
     // Log but don't throw - scoring should never break the user flow
-    console.error("[Langfuse] Failed to log score:", error);
+    telemetryLogger.error({ error }, "Failed to log score");
   }
 }
