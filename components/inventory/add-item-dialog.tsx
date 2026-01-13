@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -60,15 +60,73 @@ function ClarificationQuestionInput({
 }: ClarificationQuestionInputProps) {
   const inputId = `question-${question.question.slice(0, 20).replace(/\s+/g, "-")}`
 
+  // Filter out "Other" from options to avoid duplicates (we add our own)
+  const filteredOptions = question.options?.filter(
+    (opt) => opt.toLowerCase() !== "other"
+  ) ?? []
+
+  // Track if user is in "Other" mode (entering custom text)
+  const isCustomValue = value !== "" && !filteredOptions.includes(value)
+  const [isOtherMode, setIsOtherMode] = useState(isCustomValue)
+
+  // Update mode when value changes externally (e.g., reset)
+  useEffect(() => {
+    if (value === "") {
+      setIsOtherMode(false)
+    }
+  }, [value])
+
   switch (question.inputType) {
     case "select":
+      if (isOtherMode) {
+        // Show text input for custom value
+        return (
+          <div className="flex gap-2">
+            <Input
+              id={inputId}
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Enter your answer..."
+              disabled={disabled}
+              className="bg-white dark:bg-gray-900 flex-1"
+              autoFocus
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsOtherMode(false)
+                onChange("")
+              }}
+              disabled={disabled}
+              className="shrink-0"
+            >
+              Back
+            </Button>
+          </div>
+        )
+      }
+
       return (
-        <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <Select
+          value={value}
+          onValueChange={(newValue) => {
+            if (newValue === "__other__") {
+              setIsOtherMode(true)
+              onChange("")
+            } else {
+              onChange(newValue)
+            }
+          }}
+          disabled={disabled}
+        >
           <SelectTrigger id={inputId} className="bg-white dark:bg-gray-900">
             <SelectValue placeholder="Select an option..." />
           </SelectTrigger>
           <SelectContent>
-            {question.options?.map((option) => (
+            {filteredOptions.map((option) => (
               <SelectItem key={option} value={option}>
                 {option}
               </SelectItem>
