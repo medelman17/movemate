@@ -2,7 +2,14 @@
 
 import { generateText, createGateway } from "ai"
 import { simplifyProductName } from "./simplify-product-name"
-import { buildResearchPrompt, productInfoSchema, type ProductInfo } from "@/lib/prompts/product-research"
+import {
+  buildResearchPrompt,
+  productInfoSchema,
+  URL_META,
+  SEARCH_META,
+  type ProductInfo,
+} from "@/lib/prompts/product-research"
+import { resolveModelConfig } from "@/lib/prompts/resolve"
 import { buildProductResearchTelemetry } from "@/lib/langfuse/telemetry"
 
 // Create Vercel AI Gateway instance
@@ -42,6 +49,10 @@ export async function researchProduct(
 
     const prompt = buildResearchPrompt(input, isProductURL, photoContext)
 
+    // Resolve model config based on research mode (supports env overrides)
+    const promptMeta = isProductURL ? URL_META : SEARCH_META
+    const modelConfig = resolveModelConfig(promptMeta)
+
     // Build telemetry configuration for Langfuse
     const telemetry = buildProductResearchTelemetry({
       isUrl: isProductURL,
@@ -49,9 +60,9 @@ export async function researchProduct(
     })
 
     const { text } = await generateText({
-      model: gateway("perplexity/sonar-pro"),
+      model: gateway(modelConfig.model),
       prompt,
-      maxOutputTokens: 1000,
+      maxOutputTokens: modelConfig.maxTokens,
       experimental_telemetry: telemetry,
     })
 

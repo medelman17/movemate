@@ -1,59 +1,56 @@
-import type { ModelConfig } from "./types";
-
 /**
- * Centralized model configurations for all prompts.
- * Provides default settings for different AI models used across the application.
- */
-export const modelConfigs = {
-  /**
-   * Vision model for photo analysis.
-   * Used by: photo identification prompts
-   * Note: Gemini 3 Flash offers ~70-80% cost savings vs GPT-4o with comparable quality
-   */
-  vision: {
-    model: "google/gemini-3-flash",
-    maxTokens: 400,
-    temperature: 0.3,
-  } satisfies ModelConfig,
-
-  /**
-   * Web search model for product research.
-   * Used by: product research prompts
-   */
-  webSearch: {
-    model: "perplexity/sonar-pro",
-    maxTokens: 1000,
-    temperature: 0.2,
-  } satisfies ModelConfig,
-
-  /**
-   * Fast/cheap model for simple tasks.
-   * Used by: name simplification and other utility prompts
-   */
-  fast: {
-    model: "openai/gpt-4o-mini",
-    maxTokens: 50,
-    temperature: 0.1,
-  } satisfies ModelConfig,
-} as const;
-
-/**
- * Model type names.
- */
-export type ModelType = keyof typeof modelConfigs;
-
-/**
- * Get model configuration by type.
+ * Model Configuration Architecture
  *
- * @param type - The model type
- * @returns Model configuration object
+ * This module documents the model configuration system. Individual prompts
+ * define their own model settings in PROMPT_META, and the resolver supports
+ * environment variable overrides for operational flexibility.
  *
- * @example
- * ```typescript
- * const visionConfig = getModelConfig("vision");
- * // { model: "openai/gpt-4o", maxTokens: 400, temperature: 0.3 }
+ * ## Configuration Hierarchy
+ *
+ * 1. **PROMPT_META** (authoritative): Each prompt defines its model, maxTokens,
+ *    and version in its own file (e.g., strategic.ts exports STRATEGIC_META)
+ *
+ * 2. **Environment Overrides**: Runtime overrides via environment variables:
+ *    - AI_<PROMPT_ID>_MODEL: Override model identifier
+ *    - AI_<PROMPT_ID>_MAX_TOKENS: Override max tokens
+ *    - AI_<PROMPT_ID>_TEMPERATURE: Override temperature
+ *
+ * 3. **resolveModelConfig()**: Utility in resolve.ts that merges these sources
+ *
+ * ## Current Prompt Configurations
+ *
+ * | Prompt | Model | Tokens | Env Prefix |
+ * |--------|-------|--------|------------|
+ * | photo-identification-strategic | openai/gpt-4o | 800 | AI_PHOTO_IDENTIFICATION_STRATEGIC |
+ * | product-research-url | perplexity/sonar-pro | 1000 | AI_PRODUCT_RESEARCH_URL |
+ * | product-research-search | perplexity/sonar-pro | 1000 | AI_PRODUCT_RESEARCH_SEARCH |
+ * | simplify-product-name | openai/gpt-4o-mini | 50 | AI_SIMPLIFY_PRODUCT_NAME |
+ *
+ * ## Example: Override Photo ID Model
+ *
+ * ```bash
+ * # In .env.local - use cheaper model for development
+ * AI_PHOTO_IDENTIFICATION_STRATEGIC_MODEL=openai/gpt-4o-mini
+ * AI_PHOTO_IDENTIFICATION_STRATEGIC_MAX_TOKENS=400
  * ```
+ *
+ * ## Supported Models (via Vercel AI Gateway)
+ *
+ * Vision:
+ * - openai/gpt-4o (default for photo ID - best quality)
+ * - google/gemini-3-flash (70-80% cheaper, good quality)
+ * - openai/gpt-4o-mini (cheapest, adequate for simple items)
+ *
+ * Web Search:
+ * - perplexity/sonar-pro (best for product research)
+ * - perplexity/sonar (cheaper alternative)
+ *
+ * Fast/Utility:
+ * - openai/gpt-4o-mini (default for simple tasks)
+ *
+ * @see resolve.ts for the resolveModelConfig() function
+ * @see Each prompt's PROMPT_META for authoritative configuration
  */
-export function getModelConfig(type: ModelType): ModelConfig {
-  return modelConfigs[type];
-}
+
+// Re-export types used by the configuration system
+export type { ModelConfig, PromptConfig } from "./types";

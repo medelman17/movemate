@@ -8,6 +8,7 @@
 // Core types and utilities
 export * from "./types";
 export * from "./config";
+export * from "./resolve";
 
 // Shared prompt fragments
 export * from "./shared";
@@ -22,6 +23,7 @@ import {
   DETAILED_META,
   VISUAL_META,
   FALLBACK_META,
+  STRATEGIC_META,
 } from "./photo-identification";
 import { URL_META, SEARCH_META } from "./product-research";
 import { SIMPLIFY_NAME_META } from "./utilities";
@@ -32,9 +34,10 @@ import { SIMPLIFY_NAME_META } from "./utilities";
  */
 export const promptRegistry = {
   photoIdentification: {
-    detailed: DETAILED_META,
-    visual: VISUAL_META,
-    fallback: FALLBACK_META,
+    strategic: STRATEGIC_META, // V2 (recommended)
+    detailed: DETAILED_META, // V1 legacy
+    visual: VISUAL_META, // V1 legacy
+    fallback: FALLBACK_META, // V1 legacy
   },
   productResearch: {
     url: URL_META,

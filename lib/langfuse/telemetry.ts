@@ -1,4 +1,7 @@
 import type { PromptConfig } from "@/lib/prompts/types";
+import { STRATEGIC_META } from "@/lib/prompts/photo-identification";
+import { URL_META, SEARCH_META } from "@/lib/prompts/product-research";
+import { SIMPLIFY_NAME_META } from "@/lib/prompts/utilities";
 
 /**
  * Telemetry context for building Vercel AI SDK telemetry configuration.
@@ -44,6 +47,7 @@ export function buildTelemetry(context: TelemetryContext) {
 
 /**
  * Build telemetry for photo identification calls.
+ * Derives prompt metadata from STRATEGIC_META for single source of truth.
  */
 export function buildPhotoIdentificationTelemetry(options: {
   userId?: string;
@@ -53,17 +57,14 @@ export function buildPhotoIdentificationTelemetry(options: {
   imageType: "base64" | "url";
   clarificationRound?: number;
 }) {
-  const promptName = "photo-identification-strategic";
-  const promptVersion = "2.0.0";
-
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: promptName,
+    functionId: STRATEGIC_META.id,
     metadata: {
-      // Prompt linking for Langfuse correlation
-      promptName,
-      promptVersion,
-      promptModel: "openai/gpt-4o",
+      // Prompt linking for Langfuse correlation (derived from PROMPT_META)
+      promptName: STRATEGIC_META.id,
+      promptVersion: STRATEGIC_META.version,
+      promptModel: STRATEGIC_META.model,
       // Call context
       hasContext: options.hasContext,
       hasAnswers: options.hasAnswers,
@@ -79,6 +80,7 @@ export function buildPhotoIdentificationTelemetry(options: {
 
 /**
  * Build telemetry for product research calls.
+ * Derives prompt metadata from URL_META or SEARCH_META for single source of truth.
  */
 export function buildProductResearchTelemetry(options: {
   userId?: string;
@@ -86,17 +88,16 @@ export function buildProductResearchTelemetry(options: {
   isUrl: boolean;
   hasPhotoContext: boolean;
 }) {
-  const promptName = options.isUrl ? "product-research-url" : "product-research-search";
-  const promptVersion = "1.0.0";
+  const promptMeta = options.isUrl ? URL_META : SEARCH_META;
 
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: promptName,
+    functionId: promptMeta.id,
     metadata: {
-      // Prompt linking for Langfuse correlation
-      promptName,
-      promptVersion,
-      promptModel: "perplexity/sonar-pro",
+      // Prompt linking for Langfuse correlation (derived from PROMPT_META)
+      promptName: promptMeta.id,
+      promptVersion: promptMeta.version,
+      promptModel: promptMeta.model,
       // Call context
       isUrl: options.isUrl,
       hasPhotoContext: options.hasPhotoContext,
@@ -108,23 +109,21 @@ export function buildProductResearchTelemetry(options: {
 
 /**
  * Build telemetry for name simplification calls.
+ * Derives prompt metadata from SIMPLIFY_NAME_META for single source of truth.
  */
 export function buildSimplifyNameTelemetry(options: {
   userId?: string;
   sessionId?: string;
   originalNameLength: number;
 }) {
-  const promptName = "simplify-product-name";
-  const promptVersion = "1.0.0";
-
   return {
     isEnabled: process.env.LANGFUSE_ENABLED === "true",
-    functionId: promptName,
+    functionId: SIMPLIFY_NAME_META.id,
     metadata: {
-      // Prompt linking for Langfuse correlation
-      promptName,
-      promptVersion,
-      promptModel: "openai/gpt-4o-mini",
+      // Prompt linking for Langfuse correlation (derived from PROMPT_META)
+      promptName: SIMPLIFY_NAME_META.id,
+      promptVersion: SIMPLIFY_NAME_META.version,
+      promptModel: SIMPLIFY_NAME_META.model,
       // Call context
       originalNameLength: options.originalNameLength,
       ...(options.userId && { userId: options.userId }),
