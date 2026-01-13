@@ -7,6 +7,7 @@ import {
   type StrategicIdentification,
   type ClarificationQuestion,
 } from "@/lib/prompts/photo-identification";
+import { buildPhotoIdentificationTelemetry } from "@/lib/langfuse/telemetry";
 
 // Create Vercel AI Gateway instance
 const gateway = createGateway({
@@ -90,16 +91,25 @@ export async function identifyProductFromPhotoV2(
   }
 
   try {
+    const imageType = imageUrl.startsWith("data:") ? "base64" : "url";
+
     console.log("[v2] Strategic photo identification started", {
       hasContext: !!userContext,
       hasAnswers: !!previousAnswers,
-      imageType: imageUrl.startsWith("data:") ? "base64" : "url",
+      imageType,
     });
 
     // Build prompt with context and answers
     const promptText = buildStrategicPrompt({ userContext, previousAnswers });
 
-    // Single structured call to GPT-4o via Vercel AI Gateway
+    // Build telemetry configuration for Langfuse
+    const telemetry = buildPhotoIdentificationTelemetry({
+      hasContext: !!userContext,
+      hasAnswers: !!previousAnswers,
+      imageType,
+    });
+
+    // Single structured call to vision model via Vercel AI Gateway
     const { object } = await generateObject({
       model: gateway("openai/gpt-4o"),
       schema: strategicIdentificationSchema,
@@ -120,6 +130,7 @@ export async function identifyProductFromPhotoV2(
       ],
       maxOutputTokens: 800,
       temperature: 0.3,
+      experimental_telemetry: telemetry,
     });
 
     const duration = Date.now() - startTime;
