@@ -1,9 +1,10 @@
 ---
 id: task-6.2
 title: Create location server actions (CRUD)
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-13 15:05'
+updated_date: '2026-01-13 15:16'
 labels:
   - server-actions
   - api
