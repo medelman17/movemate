@@ -1,9 +1,10 @@
 ---
 id: task-8
 title: Add Observability Stack (Sentry + Pino)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 16:53'
+updated_date: '2026-01-13 17:15'
 labels:
   - observability
   - infrastructure

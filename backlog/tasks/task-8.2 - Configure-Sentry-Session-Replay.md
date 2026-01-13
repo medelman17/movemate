@@ -1,9 +1,10 @@
 ---
 id: task-8.2
 title: Configure Sentry Session Replay
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 16:53'
+updated_date: '2026-01-13 17:15'
 labels:
   - observability
 dependencies:
@@ -35,3 +36,9 @@ Sentry.init({
 - Review what gets captured
 - Configure appropriate sampling
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Session Replay configured in instrumentation-client.ts with replayIntegration: 10% session sample rate in production, 100% on error, privacy masking enabled
+<!-- SECTION:NOTES:END -->

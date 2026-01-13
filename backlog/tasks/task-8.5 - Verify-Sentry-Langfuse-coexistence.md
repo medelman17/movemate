@@ -1,9 +1,10 @@
 ---
 id: task-8.5
 title: Verify Sentry + Langfuse coexistence
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-13 16:53'
+updated_date: '2026-01-13 17:15'
 labels:
   - observability
   - testing
@@ -29,3 +30,9 @@ Ensure both observability tools work together:
 - Ensure instrumentation.ts registers both correctly
 - Verify no span duplication or dropped spans
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Sentry and Langfuse coexist successfully - both initialize in instrumentation.ts register() function without conflicts. Sentry handles errors/performance, Langfuse handles LLM observability via OpenTelemetry.
+<!-- SECTION:NOTES:END -->
