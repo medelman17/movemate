@@ -47,7 +47,7 @@ export const buildPrompt: PromptBuilder<StrategicIdentificationContext> = (conte
       : "";
 
   // Final round instruction - no more questions allowed
-  const isFinalRound = clarificationRound !== undefined && clarificationRound >= 1;
+  const isFinalRound = clarificationRound !== undefined && clarificationRound >= 4;
   const finalRoundSection = isFinalRound
     ? `\n\n⚠️ FINAL ROUND - NO MORE QUESTIONS ALLOWED ⚠️
 This is the FINAL clarification round. You MUST NOT ask any more questions.

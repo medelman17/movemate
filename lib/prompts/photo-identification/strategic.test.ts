@@ -87,8 +87,16 @@ describe("strategic prompt", () => {
       expect(prompt).not.toContain("NO MORE QUESTIONS ALLOWED");
     });
 
-    it("includes final round warning when clarificationRound is 1", () => {
-      const prompt = buildPrompt({ clarificationRound: 1 });
+    it("does not include final round warning for rounds 1-3", () => {
+      for (const round of [1, 2, 3]) {
+        const prompt = buildPrompt({ clarificationRound: round });
+        expect(prompt).not.toContain("FINAL ROUND");
+        expect(prompt).not.toContain("NO MORE QUESTIONS ALLOWED");
+      }
+    });
+
+    it("includes final round warning when clarificationRound is 4", () => {
+      const prompt = buildPrompt({ clarificationRound: 4 });
 
       expect(prompt).toContain("FINAL ROUND");
       expect(prompt).toContain("NO MORE QUESTIONS ALLOWED");
@@ -96,8 +104,8 @@ describe("strategic prompt", () => {
       expect(prompt).toContain("return an empty questions array");
     });
 
-    it("includes final round warning when clarificationRound is >= 1", () => {
-      const prompt = buildPrompt({ clarificationRound: 2 });
+    it("includes final round warning when clarificationRound is >= 4", () => {
+      const prompt = buildPrompt({ clarificationRound: 5 });
 
       expect(prompt).toContain("FINAL ROUND");
       expect(prompt).toContain("NO MORE QUESTIONS ALLOWED");
@@ -105,7 +113,7 @@ describe("strategic prompt", () => {
 
     it("includes final round warning with previous answers", () => {
       const prompt = buildPrompt({
-        clarificationRound: 1,
+        clarificationRound: 4,
         previousAnswers: { "Where purchased?": "IKEA" },
       });
 
