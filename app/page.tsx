@@ -143,6 +143,14 @@ export default function HomePage() {
   }
 
   const handleExportCSV = () => {
+    // Escape a cell value for CSV (RFC 4180 compliant)
+    // - Wrap in double quotes
+    // - Escape internal double quotes by doubling them
+    const escapeCSV = (value: unknown): string => {
+      const str = String(value ?? "")
+      return `"${str.replace(/"/g, '""')}"`
+    }
+
     const headers = [
       "Name",
       "Description",
@@ -166,7 +174,7 @@ export default function HomePage() {
       item.is_packed ? "Packed" : "Not Packed",
     ])
 
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n")
+    const csv = [headers, ...rows].map((row) => row.map(escapeCSV).join(",")).join("\n")
     const blob = new Blob([csv], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
