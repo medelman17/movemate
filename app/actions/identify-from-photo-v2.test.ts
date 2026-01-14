@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { StrategicIdentification } from "@/lib/prompts/photo-identification";
 
 // Mock the AI SDK before any imports
 vi.mock("ai", () => ({
@@ -23,7 +24,7 @@ const mockGenerateObject = vi.mocked(generateObject);
 /**
  * Creates a minimal mock response that satisfies the generateObject return type.
  */
-function createMockResponse(object: ReturnType<typeof createValidResponse>) {
+function createMockResponse(object: StrategicIdentification) {
   return {
     object,
   } as Awaited<ReturnType<typeof generateObject>>;
@@ -32,7 +33,7 @@ function createMockResponse(object: ReturnType<typeof createValidResponse>) {
 /**
  * Creates a valid strategic identification response for testing.
  */
-function createValidResponse() {
+function createValidResponse(): StrategicIdentification {
   return {
     itemType: "Coffee Table",
     category: "Furniture",
@@ -342,8 +343,8 @@ describe("identifyProductFromPhotoV2", () => {
 
       expect(result.identified).toBeUndefined();
       expect(result.questions).toBeDefined();
-      expect(result.questions!.length).toBe(1);
-      expect(result.questions![0].question).toBe("Where did you purchase this?");
+      expect(result.questions).toHaveLength(1);
+      expect(result.questions?.[0]?.question).toBe("Where did you purchase this?");
     });
 
     it("hides questions when immediate ID exists", async () => {

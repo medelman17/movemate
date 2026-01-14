@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 
 test("debug: what's on the page?", async ({ page }) => {
   await page.goto("http://localhost:3000");
@@ -9,8 +9,7 @@ test("debug: what's on the page?", async ({ page }) => {
   // Take a screenshot
   await page.screenshot({ path: "e2e/screenshots/page-state.png", fullPage: true });
 
-  // Get page content
-  const content = await page.content();
+  // Log page info
   console.log("Page title:", await page.title());
   console.log("Page URL:", page.url());
 

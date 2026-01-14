@@ -129,8 +129,8 @@ test.describe("V2 Photo Identification", () => {
     await expect(page.locator("text=Auto-fill")).toBeVisible({ timeout: 30000 });
 
     // Check that console logs show research happening
-    const hasResearchLog = consoleLogs.some((log) => log.includes("[v0] Research input:"));
-    console.log("Console logs captured:", consoleLogs.filter((l) => l.includes("[v0]")));
+    const _hasResearchLog = consoleLogs.some((log) => log.includes("[v0] Research input:"));
+    console.log("Console logs captured:", consoleLogs.filter((l) => l.includes("[v0]")), _hasResearchLog);
 
     // Product info found toast or form should be filled
     // (We don't assert on the actual values as they depend on the API)

@@ -3,6 +3,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // Store original env
 const originalEnv = process.env;
 
+// Helper to set NODE_ENV (avoids readonly type error)
+const setNodeEnv = (value: string) => {
+  (process.env as Record<string, string | undefined>).NODE_ENV = value;
+};
+
 describe("logger module", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -51,7 +56,7 @@ describe("logger module", () => {
   describe("log level configuration", () => {
     it("respects LOG_LEVEL env var", async () => {
       process.env.LOG_LEVEL = "warn";
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
 
       const { logger } = await import("./logger");
       expect(logger.level).toBe("warn");
@@ -59,7 +64,7 @@ describe("logger module", () => {
 
     it("defaults to info in production without LOG_LEVEL", async () => {
       delete process.env.LOG_LEVEL;
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
 
       const { logger } = await import("./logger");
       expect(logger.level).toBe("info");
@@ -67,7 +72,7 @@ describe("logger module", () => {
 
     it("defaults to debug in development without LOG_LEVEL", async () => {
       delete process.env.LOG_LEVEL;
-      process.env.NODE_ENV = "development";
+      setNodeEnv("development");
 
       const { logger } = await import("./logger");
       expect(logger.level).toBe("debug");
