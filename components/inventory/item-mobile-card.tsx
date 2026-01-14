@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { CardContent } from "@/components/ui/card"
 import { SwipeableCard } from "@/components/ui/swipeable-card"
@@ -17,6 +18,7 @@ interface ItemMobileCardProps {
 }
 
 export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
+  const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -67,7 +69,10 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
         rightActions={rightActions}
         disabled={isDeleting}
       >
-        <CardContent className="p-3 sm:p-4 border rounded-xl bg-card">
+        <CardContent
+          className="p-3 sm:p-4 border rounded-xl bg-card cursor-pointer active:bg-muted/50 transition-colors"
+          onClick={() => router.push(`/inventory/${item.id}`)}
+        >
           <div>
             <h3 className="font-semibold text-sm leading-snug mb-0.5">{item.name}</h3>
             {item.description && (

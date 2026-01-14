@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Edit, Trash2 } from "lucide-react"
+import { MoreVertical, Edit, Trash2, Eye } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemWithLocation } from "@/lib/types"
 import { EditItemDialog } from "./edit-item-dialog"
@@ -20,6 +21,7 @@ interface ItemTableRowProps {
 }
 
 export function ItemTableRow({ item, onUpdate, isSelected = false, onSelectionChange }: ItemTableRowProps) {
+  const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -58,7 +60,10 @@ export function ItemTableRow({ item, onUpdate, isSelected = false, onSelectionCh
           )}
         </TableCell>
         <TableCell className="max-w-[300px]">
-          <div>
+          <div
+            className="cursor-pointer hover:text-primary transition-colors"
+            onClick={() => router.push(`/inventory/${item.id}`)}
+          >
             <div className="font-medium truncate">{item.name}</div>
             {item.description && (
               <div className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{item.description}</div>
@@ -101,6 +106,10 @@ export function ItemTableRow({ item, onUpdate, isSelected = false, onSelectionCh
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/inventory/${item.id}`)}>
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
