@@ -222,9 +222,9 @@ export default function HomePage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => router.push("/settings/locations")}
+                onClick={() => router.push("/settings")}
                 className="h-9 w-9 sm:h-10 sm:w-10"
-                title="Manage locations"
+                title="Settings"
               >
                 <Settings className="h-4 w-4" />
                 <span className="sr-only">Settings</span>
