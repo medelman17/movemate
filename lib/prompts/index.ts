@@ -17,6 +17,7 @@ export * from "./shared";
 export * from "./photo-identification";
 export * from "./product-research";
 export * from "./utilities";
+export * from "./packing-tips";
 
 // Re-import for registry
 import {
@@ -27,6 +28,7 @@ import {
 } from "./photo-identification";
 import { URL_META, SEARCH_META } from "./product-research";
 import { SIMPLIFY_NAME_META } from "./utilities";
+import { BEST_PRACTICES_META } from "./packing-tips";
 
 /**
  * Central registry of all prompts with their metadata.
@@ -45,6 +47,9 @@ export const promptRegistry = {
   },
   utilities: {
     simplifyName: SIMPLIFY_NAME_META,
+  },
+  packingTips: {
+    bestPractices: BEST_PRACTICES_META,
   },
 } as const;
 

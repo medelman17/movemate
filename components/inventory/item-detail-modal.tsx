@@ -1,10 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Item } from "@/lib/types"
-import { Package, MapPin, Ruler, Weight, Wrench, CheckCircle2, Circle } from "lucide-react"
+import { Package, MapPin, Ruler, Weight, Wrench, CheckCircle2, Circle, Lightbulb, AlertTriangle, ShoppingBag } from "lucide-react"
+import { getPackingTips, type PackingTips } from "@/app/actions/packing-tips"
 
 interface ItemDetailModalProps {
   item: Item | null
@@ -13,6 +15,47 @@ interface ItemDetailModalProps {
 }
 
 export function ItemDetailModal({ item, open, onOpenChange }: ItemDetailModalProps) {
+  const [packingTips, setPackingTips] = useState<PackingTips | null>(null)
+  const [loadingTips, setLoadingTips] = useState(false)
+  const [tipsError, setTipsError] = useState<string | null>(null)
+
+  // Fetch packing tips when modal opens with an item
+  useEffect(() => {
+    if (!item || !open) {
+      setPackingTips(null)
+      setTipsError(null)
+      return
+    }
+
+    const fetchPackingTips = async () => {
+      setLoadingTips(true)
+      setTipsError(null)
+      try {
+        const tips = await getPackingTips({
+          itemName: item.name,
+          category: item.category,
+          description: item.description || undefined,
+          canDisassemble: item.can_disassemble,
+          isFragile: item.is_fragile,
+          dimensions: {
+            length: item.length,
+            width: item.width,
+            height: item.height,
+          },
+          weight: item.weight,
+        })
+        setPackingTips(tips)
+      } catch (error) {
+        console.error("Failed to fetch packing tips:", error)
+        setTipsError("Unable to load packing tips")
+      } finally {
+        setLoadingTips(false)
+      }
+    }
+
+    fetchPackingTips()
+  }, [item, open])
+
   if (!item) return null
 
   const volume =
@@ -150,6 +193,76 @@ export function ItemDetailModal({ item, open, onOpenChange }: ItemDetailModalPro
               </div>
             </>
           )}
+
+          <Separator />
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Moving & Storage Tips</h3>
+            </div>
+
+            {loadingTips && (
+              <div className="text-sm text-muted-foreground italic">
+                Researching best practices...
+              </div>
+            )}
+
+            {tipsError && (
+              <div className="text-sm text-destructive">
+                {tipsError}
+              </div>
+            )}
+
+            {packingTips && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">Best Practices</h4>
+                  <ul className="space-y-2">
+                    {packingTips.tips.map((tip, index) => (
+                      <li key={index} className="text-sm flex gap-2">
+                        <span className="text-muted-foreground">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {packingTips.materials && packingTips.materials.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                      <h4 className="text-xs font-medium text-muted-foreground">Recommended Materials</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {packingTips.materials.map((material, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {material}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {packingTips.warnings && packingTips.warnings.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-3 w-3 text-amber-600" />
+                      <h4 className="text-xs font-medium text-amber-600">Important Warnings</h4>
+                    </div>
+                    <ul className="space-y-1">
+                      {packingTips.warnings.map((warning, index) => (
+                        <li key={index} className="text-xs text-amber-700 flex gap-2">
+                          <span>⚠️</span>
+                          <span>{warning}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="text-xs text-muted-foreground">
             <p>Created: {new Date(item.created_at).toLocaleDateString()}</p>
