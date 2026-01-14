@@ -31,6 +31,9 @@ import { useToast } from "@/hooks/use-toast"
 import { LocationSelector } from "@/components/inventory/location-selector"
 import { CategorySelector } from "@/components/inventory/category-selector"
 
+// Feature flag: Disable photo identification while it's being improved
+const PHOTO_IDENTIFICATION_ENABLED = false
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const MIN_IMAGE_DIMENSION = 100 // 100px minimum
 const MAX_IMAGE_DIMENSION = 4096 // 4096px maximum
@@ -1017,7 +1020,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
-            {isAnalyzingPhoto && processingStage && (
+            {PHOTO_IDENTIFICATION_ENABLED && isAnalyzingPhoto && processingStage && (
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
                 <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-primary shrink-0" />
                 <div className="flex-1">
@@ -1033,7 +1036,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             )}
 
-            {clarificationNeeded && pendingResult?.questions && pendingResult.questions.length > 0 && (
+            {PHOTO_IDENTIFICATION_ENABLED && clarificationNeeded && pendingResult?.questions && pendingResult.questions.length > 0 && (
               <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
@@ -1212,61 +1215,63 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             )}
 
-            <div className="grid gap-1.5 sm:gap-2">
-              <Label>Product Photo (Optional)</Label>
-              {uploadedPhoto ? (
-                <div className="relative">
-                  <img
-                    src={uploadedPhoto || "/placeholder.svg"}
-                    alt="Uploaded product"
-                    className="w-full h-48 object-cover rounded-lg border"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={clearPhoto}
-                    disabled={isAnalyzingPhoto}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*,.heic,.heif"
-                    onChange={handlePhotoUpload}
-                    disabled={isAnalyzingPhoto}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2 w-full bg-transparent"
-                    onClick={() => document.getElementById("photo-upload")?.click()}
-                    disabled={isAnalyzingPhoto}
-                  >
-                    {isAnalyzingPhoto ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-4 w-4" />
-                        Upload Photo to Auto-Identify
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Upload a photo (including iPhone HEIC) and we'll identify the item and help you find specifications
-              </p>
-            </div>
+            {PHOTO_IDENTIFICATION_ENABLED && (
+              <div className="grid gap-1.5 sm:gap-2">
+                <Label>Product Photo (Optional)</Label>
+                {uploadedPhoto ? (
+                  <div className="relative">
+                    <img
+                      src={uploadedPhoto || "/placeholder.svg"}
+                      alt="Uploaded product"
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={clearPhoto}
+                      disabled={isAnalyzingPhoto}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*,.heic,.heif"
+                      onChange={handlePhotoUpload}
+                      disabled={isAnalyzingPhoto}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2 w-full bg-transparent"
+                      onClick={() => document.getElementById("photo-upload")?.click()}
+                      disabled={isAnalyzingPhoto}
+                    >
+                      {isAnalyzingPhoto ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-4 w-4" />
+                          Upload Photo to Auto-Identify
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Upload a photo (including iPhone HEIC) and we'll identify the item and help you find specifications
+                </p>
+              </div>
+            )}
 
             <div className="grid gap-1.5 sm:gap-2">
               <Label htmlFor="name">Item Name *</Label>
