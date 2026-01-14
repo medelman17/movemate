@@ -196,10 +196,7 @@ export default function HomePage() {
               <div className="rounded-xl bg-primary p-2 sm:p-2.5 shrink-0">
                 <BoxIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-xl font-bold leading-tight">MoveMate Inventory</h1>
-                <p className="text-xs text-muted-foreground">Track metrics & volume</p>
-              </div>
+              <h1 className="text-base sm:text-xl font-bold">MoveMate</h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Button
