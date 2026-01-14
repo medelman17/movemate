@@ -1010,16 +1010,16 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
           Add Item
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:p-6">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>Add an item to your moving inventory</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             {isAnalyzingPhoto && processingStage && (
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center gap-3">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-primary shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">{processingStage}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1034,26 +1034,26 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
             )}
 
             {clarificationNeeded && pendingResult?.questions && pendingResult.questions.length > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-3 sm:space-y-4">
                     {/* Header with strategy info */}
                     <div>
-                      <h4 className="font-medium text-amber-900 dark:text-amber-100">
+                      <h4 className="font-medium text-sm sm:text-base text-amber-900 dark:text-amber-100">
                         Help us identify this product
                       </h4>
-                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                      <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 mt-0.5 sm:mt-1">
                         Strategy: {pendingResult.strategy.approach.replace(/_/g, " ")}
                         {clarificationRound > 0 && ` (Round ${clarificationRound + 1}/3)`}
                       </p>
                     </div>
 
                     {/* Rich question inputs */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {pendingResult.questions.map((question, idx) => (
-                        <div key={idx} className="space-y-2">
-                          <Label className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        <div key={idx} className="space-y-1.5 sm:space-y-2">
+                          <Label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 leading-snug">
                             {question.question}
                           </Label>
                           <ClarificationQuestionInput
@@ -1068,7 +1068,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                             disabled={isAnalyzingPhoto}
                           />
                           {question.rationale && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 italic">
+                            <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 italic leading-relaxed">
                               {question.rationale}
                             </p>
                           )}
@@ -1077,11 +1077,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                     </div>
 
                     {/* Estimates preview section */}
-                    <div className="bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-700 rounded-md p-3">
-                      <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    <div className="bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-700 rounded-md p-2.5 sm:p-3">
+                      <h5 className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 sm:mb-2">
                         Current Estimates
                       </h5>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 sm:gap-2 text-xs sm:text-sm">
                         <div>
                           <span className="text-gray-500 dark:text-gray-400">Type:</span>{" "}
                           <span className="text-gray-900 dark:text-gray-100">
@@ -1116,27 +1116,27 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                         )}
                       </div>
                       {pendingResult.features.length > 0 && (
-                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                           Features: {pendingResult.features.slice(0, 3).join(", ")}
                         </div>
                       )}
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                      <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1.5 sm:mt-2">
                         These will be used if we can't identify the exact product.
                       </p>
                     </div>
 
                     {/* Additional photos section */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => document.getElementById("clarification-photo-input")?.click()}
                           disabled={isAnalyzingPhoto}
-                          className="border-amber-300 dark:border-amber-700"
+                          className="border-amber-300 dark:border-amber-700 text-xs sm:text-sm h-8 sm:h-9"
                         >
-                          <Camera className="h-4 w-4 mr-2" />
+                          <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                           Add Photo
                         </Button>
                         <Input
@@ -1148,20 +1148,20 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                           className="hidden"
                         />
                         {clarificationPhotos.length > 0 && (
-                          <span className="text-sm text-amber-700 dark:text-amber-400">
+                          <span className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
                             {clarificationPhotos.length} photo{clarificationPhotos.length > 1 ? "s" : ""} added
                           </span>
                         )}
                       </div>
 
                       {clarificationPhotos.length > 0 && (
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                           {clarificationPhotos.map((photo, idx) => (
                             <div key={idx} className="relative group">
                               <img
                                 src={photo || "/placeholder.svg"}
                                 alt={`Additional view ${idx + 1}`}
-                                className="w-full h-20 object-cover rounded border border-amber-200 dark:border-amber-700"
+                                className="w-full h-16 sm:h-20 object-cover rounded border border-amber-200 dark:border-amber-700"
                               />
                               <Button
                                 type="button"
@@ -1181,13 +1181,13 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleSkipClarification}
                         disabled={isAnalyzingPhoto}
-                        className="flex-1 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                        className="flex-1 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-xs sm:text-sm h-9 sm:h-10"
                       >
                         Skip & Use Estimates
                       </Button>
@@ -1195,11 +1195,11 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                         type="button"
                         onClick={handleClarificationSubmit}
                         disabled={isAnalyzingPhoto}
-                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm h-9 sm:h-10"
                       >
                         {isAnalyzingPhoto ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                             Analyzing...
                           </>
                         ) : (
@@ -1212,7 +1212,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             )}
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5 sm:gap-2">
               <Label>Product Photo (Optional)</Label>
               {uploadedPhoto ? (
                 <div className="relative">
@@ -1268,7 +1268,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </p>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5 sm:gap-2">
               <Label htmlFor="name">Item Name *</Label>
               <div className="flex gap-2">
                 <Input
@@ -1306,7 +1306,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </p>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5 sm:gap-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -1316,8 +1316,8 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="category">Category</Label>
                 <CategorySelector
                   value={formData.category_id}
@@ -1328,7 +1328,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                 />
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="location">Location</Label>
                 <LocationSelector
                   value={formData.location_id}
@@ -1340,8 +1340,8 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="quantity">Quantity</Label>
                 <Input
                   id="quantity"
@@ -1352,7 +1352,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                 />
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="weight">Weight (lbs)</Label>
                 <Input
                   id="weight"
@@ -1367,8 +1367,8 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="length">Length (in)</Label>
                 <Input
                   id="length"
@@ -1382,7 +1382,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                 />
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="width">Width (in)</Label>
                 <Input
                   id="width"
@@ -1396,7 +1396,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
                 />
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5 sm:gap-2">
                 <Label htmlFor="height">Height (in)</Label>
                 <Input
                   id="height"
@@ -1411,7 +1411,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
               </div>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5 sm:gap-2">
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"

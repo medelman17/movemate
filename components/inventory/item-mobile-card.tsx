@@ -67,14 +67,14 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
         rightActions={rightActions}
         disabled={isDeleting}
       >
-        <CardContent className="p-2.5 border rounded-xl bg-card">
+        <CardContent className="p-3 sm:p-4 border rounded-xl bg-card">
           <div>
-            <h3 className="font-semibold text-sm leading-tight mb-1">{item.name}</h3>
+            <h3 className="font-semibold text-sm leading-snug mb-0.5">{item.name}</h3>
             {item.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">{item.description}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2.5">{item.description}</p>
             )}
 
-            <div className="grid grid-cols-2 gap-x-2.5 gap-y-1 mb-2">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-2.5">
               <div className="flex items-center gap-1.5 text-xs">
                 <Package className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="text-muted-foreground">Qty:</span>
@@ -100,7 +100,7 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
                 {item.category}
               </Badge>
