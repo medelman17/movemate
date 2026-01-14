@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Edit, Trash2, Package, Ruler, Weight } from "lucide-react"
+import { CardContent } from "@/components/ui/card"
+import { SwipeableCard } from "@/components/ui/swipeable-card"
+import { Edit, Trash2, Package, Ruler, Weight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ItemWithLocation } from "@/lib/types"
 import { EditItemDialog } from "./edit-item-dialog"
@@ -43,32 +42,33 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
       ? `${item.length.toFixed(2)} × ${item.width.toFixed(2)} × ${item.height.toFixed(2)}"`
       : null
 
+  const leftActions = [
+    {
+      icon: <Edit className="h-5 w-5" />,
+      label: "Edit",
+      onClick: () => setIsEditOpen(true),
+      className: "bg-blue-500",
+    },
+  ]
+
+  const rightActions = [
+    {
+      icon: <Trash2 className="h-5 w-5" />,
+      label: "Delete",
+      onClick: handleDelete,
+      className: "bg-destructive",
+    },
+  ]
+
   return (
     <>
-      <Card className="relative">
-        <CardContent className="p-2.5">
-          <div className="absolute top-2 right-2 z-10">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="pr-8">
+      <SwipeableCard
+        leftActions={leftActions}
+        rightActions={rightActions}
+        disabled={isDeleting}
+      >
+        <CardContent className="p-2.5 border rounded-xl bg-card">
+          <div>
             <h3 className="font-semibold text-sm leading-tight mb-1">{item.name}</h3>
             {item.description && (
               <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">{item.description}</p>
@@ -115,7 +115,7 @@ export function ItemMobileCard({ item, onUpdate }: ItemMobileCardProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </SwipeableCard>
 
       <EditItemDialog item={item} open={isEditOpen} onOpenChange={setIsEditOpen} onUpdate={onUpdate} />
     </>
